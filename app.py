@@ -64,6 +64,13 @@ def login():
 def home():
     return render_template('home.html')
 
+@app.route("/login")
+def loginPage():
+    return render_template('login.html')
+
+@app.route("/signup")
+def signupPage():
+    return render_template('signup.html')
 
 @app.route("/admin/api/additems", methods=['POST'])
 def addItems():
