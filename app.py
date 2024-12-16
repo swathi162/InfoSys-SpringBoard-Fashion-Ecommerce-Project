@@ -65,5 +65,39 @@ def home():
     return render_template('home.html')
 
 
+@app.route("/admin/api/additems", methods=['POST'])
+def addItems():
+    data = request.get_json()
+
+    # Validate input data
+    name = data.get('name')
+    price = data.get('price')
+    category = data.get('category')
+    brand = data.get('brand')
+    image = data.get('image')
+
+    if not all([name, price, category, brand]):
+        return jsonify({'message': 'All fields except image are required'}), 400
+
+    try:
+        # Create new product
+        new_product = models.Product(
+            name=name,
+            price=float(price),
+            category=category,
+            brand=brand,
+            image=image  
+        )
+
+        # Add to database
+        db.session.add(new_product)
+        db.session.commit()
+
+        return jsonify({'message': 'Product added successfully'}), 201
+    except Exception as e:
+        return jsonify({'message': f'An error occurred: {str(e)}'}), 500
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)

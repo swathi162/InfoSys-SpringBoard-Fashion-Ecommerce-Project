@@ -8,3 +8,6 @@ __pycache__/
 # Ignore system files
 .DS_Store  # For macOS users
 Thumbs.db  # For Windows users
+
+#Ignore idea folders
+.idea
