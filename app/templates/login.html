@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+        {% block title %}Login Form{% endblock title %}
+        {% block heads %}
+        <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+        {% endblock heads %}
+    {% block content %}
+        <div class="wrapper login-1">
+            <div class="container">
+                <div class="col-left">
+                    <div class="login-text">
+                        <h2>Welcome Back</h2>
+                        <p>Create your account.</p>
+                        <a class="btn" href="/signup">Sign Up</a>
+                    </div>
+                </div>
+                <div class="col-right">
+                    <div class="login-form">
+                        <h2>Login</h2>
+                        <form method="post">
+                            <p>
+                                <label>Username<span>*</span></label>
+                                <input type="text" name = "username"  placeholder="Username" required>
+                            </p>
+                            <p>
+                                <label>Password<span>*</span></label>
+                                <input type="password" name="password" placeholder="Password" required>
+                            </p>
+                            <p>
+                                <input type="submit" value="Sign In" />
+                            </p>
+                            <p>
+                                <a href="">Forget Password?</a>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        {% endblock content %}
+        {% block scripts %}
+        
+        {% endblock scripts %}
