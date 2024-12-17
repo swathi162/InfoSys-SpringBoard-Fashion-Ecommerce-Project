@@ -28,10 +28,13 @@
           <label for="address" class="form-label">Address</label>
           <textarea class="form-control" id="address" rows="3" required></textarea>
         </div>
-        <button type="submit" class="btn btn-primary">Update</button>
+        <div class="d-flex justify-content-start mt-4">
+          <button type="submit" class="btn btn-primary me-3">Add Item</button>
+          <button type="button" class="btn btn-secondary" onclick="goBack()">Back</button>
+        </div>
       </form>
     </div>
-    <button class="btn btn-secondary mt-3" onclick="goBack()">Back</button>
+    
   </div>
   <script>
     function goBack() {
