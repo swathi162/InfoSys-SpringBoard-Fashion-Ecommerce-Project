@@ -8,32 +8,71 @@
   <link rel="stylesheet" href="add-shop-items.css">
 </head>
 <body>
-  <div class="container">
-    <h2 class="text-center my-4">Add Shop Items</h2>
-    <form>
-      <div class="mb-3">
-        <label for="productName" class="form-label">Product Name</label>
-        <input type="text" class="form-control" id="productName" required>
-      </div>
-      <div class="mb-3">
-        <label for="price" class="form-label">Price</label>
-        <input type="number" class="form-control" id="price" required>
-      </div>
-      <div class="mb-3">
-        <label for="category" class="form-label">Category</label>
-        <input type="text" class="form-control" id="category" required>
-      </div>
-      <div class="mb-3">
-        <label for="image" class="form-label">Image</label>
-        <input type="file" class="form-control" id="image" accept="image/*">
-      </div>
-      <button type="submit" class="btn btn-primary">Add Item</button>
-    </form>
-    <button class="btn btn-secondary mt-3" onclick="goBack()">Back</button>
+  <div class="wrapper">
+    <!-- Heading -->
+    <h2 class="container-heading">Add Shop Items</h2>
+
+    <!-- Form Container -->
+    <div class="container form-container">
+      <form id="addItemForm">
+        <div class="mb-3">
+          <label for="productName" class="form-label">Product Name</label>
+          <input type="text" class="form-control" id="productName" placeholder="Enter product name" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea class="form-control" id="description" rows="3" placeholder="Enter product description" required></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="price" class="form-label">Price (in decimal)</label>
+          <input type="number" step="0.01" class="form-control" id="price" placeholder="Enter price" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="stockQuantity" class="form-label">Stock Quantity</label>
+          <input type="number" class="form-control" id="stockQuantity" placeholder="Enter stock quantity" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="brand" class="form-label">Brand</label>
+          <input type="text" class="form-control" id="brand" placeholder="Enter brand name" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="categoryName" class="form-label">Category Name</label>
+          <input type="text" class="form-control" id="categoryName" placeholder="Enter category name" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="updatedAt" class="form-label">Updated At</label>
+          <input type="datetime-local" class="form-control" id="updatedAt" required>
+        </div>
+
+        <div class="d-flex justify-content-start mt-4">
+          <button type="submit" class="btn btn-primary">Add Item</button>
+          <button type="button" class="btn btn-secondary" onclick="goBack()">Back</button>
+        </div>
+      </form>
+    </div>
   </div>
+
   <script>
     function goBack() {
       window.history.back();
+    }
+
+    document.getElementById('addItemForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const updatedAtField = document.getElementById('updatedAt');
+      updatedAtField.value = getCurrentDateTime();
+      alert("Product details saved successfully!");
+    });
+
+    function getCurrentDateTime() {
+      const now = new Date();
+      return now.toISOString().slice(0, 16); // Format as "YYYY-MM-DDTHH:mm"
     }
   </script>
 </body>
