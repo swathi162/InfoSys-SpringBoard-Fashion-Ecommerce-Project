@@ -70,3 +70,27 @@ def add_shop_items():
         return jsonify({'message': f'An error occurred: {str(e)}'}), 500
     finally:
         db.session.close()  # Ensure the session is closed
+
+
+# Define the route to remove shop items
+@admin.route('/remove-shop-items/<int:product_id>', methods=['DELETE'])
+@login_required
+def remove_shop_items(product_id):
+    try:
+        # Query the product by ID
+        product = Product.query.get(product_id)
+
+        # Check if the product exists
+        if not product:
+            return jsonify({'message': 'Product not found'}), 404
+
+        # Remove the product from the database
+        db.session.delete(product)
+        db.session.commit()
+
+        return jsonify({'message': 'Product removed successfully'}), 200
+    except Exception as e:
+        db.session.rollback()  # Rollback transaction in case of error
+        return jsonify({'message': f'An error occurred: {str(e)}'}), 500
+    finally:
+        db.session.close()  # Ensure the session is closed
