@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div class="d-flex" id="wrapper">
+    <!-- Sidebar -->
+      <div class="bg-dark text-white sidebar admin-panel" id="sidebar-wrapper">
+        <h2 class="text-center py-3">Admin Panel</h2>
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link text-white" href="#" data-bs-toggle="collapse" data-bs-target="#dashboard-menu">Dashboard</a>
+            <ul id="dashboard-menu" class="collapse">
+              <li><a href="#" onclick="goToDashboard()" class="text-white nav-link ps-4">Overview</a></li>
+              <li><a href="#" class="text-white nav-link ps-4">Reports</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" href="#" data-bs-toggle="collapse" data-bs-target="#manage-products-menu">Manage Products</a>
+            <ul id="manage-products-menu" class="collapse">
+              <li><a href="add-shop-items.html" class="text-white nav-link ps-4">Add Product</a></li>
+              <li><a href="delivery-items.html" class="text-white nav-link ps-4">View Product</a></li>
+              <li><a href="#" class="text-white nav-link ps-4">Remove Product</a></li>
+              <li><a href="update-details.html" class="text-white nav-link ps-4">Update Product Details</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" href="#" data-bs-toggle="collapse" data-bs-target="#orders-menu">Orders</a>
+            <ul id="orders-menu" class="collapse">
+              <li><a href="#" onclick="loadOrders('Pending')" class="text-white nav-link ps-4">Pending Orders</a></li>
+              <li><a href="#" onclick="loadOrders('Completed')" class="text-white nav-link ps-4">Completed Orders</a></li>
+              <li><a href="#" onclick="loadOrders('Cancelled')" class="text-white nav-link ps-4">Cancelled Orders</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" href="#" data-bs-toggle="collapse" data-bs-target="#settings-menu">Settings</a>
+            <ul id="settings-menu" class="collapse">
+              <li><a href="profile.html" class="text-white nav-link ps-4">Profile</a></li>
+              <li><a href="change-password.html" class="text-white nav-link ps-4">Change Password</a></li>
+              <li><a href="#" class="text-white nav-link ps-4">Notifications</a></li>
+              <li><a href="#" class="list-group-item list-group-item-action bg-transparent text-danger">Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+    <!-- Page Content -->
+    <div id="page-content">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+        <div class="container-fluid">
+          <button class="btn btn-primary" id="menu-toggle">Toggle Menu</button>
+          <h4 class="ms-auto">
+            <img src="admin-image-placeholder.jpg" alt="Admin Image" class="admin-image me-2">Welcome, Admin
+          </h4>
+        </div>
+      </nav>
+
+      <h2>Dashboard</h2>
+      <div class=" d-flex flex-row justify-content-center mt-4">
+        <div class="row g-4">
+          <!-- Cards with equal size and full row -->
+          <div class="col-md-3">
+            <div class="card text-white bg-primary dashboard-card" onclick="loadOrders('Pending')">
+              <div class="card-body card-width">
+                <h5 class="card-title">Pending Orders</h5>
+                <p class="card-text display-4">75</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-success dashboard-card" onclick="loadOrders('Completed')">
+              <div class="card-body card-width">
+                <h5 class="card-title">Completed Orders</h5>
+                <p class="card-text display-4">50</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-warning dashboard-card" onclick="loadOrders('Cancelled')">
+              <div class="card-body card-width">
+                <h5 class="card-title">Cancelled Orders</h5>
+                <p class="card-text display-4">30</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-danger dashboard-card">
+              <div class="card-body">
+                <h5 class="card-title">Revenue</h5>
+                <p class="card-text display-4">$15k</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Details Section -->
+      <div id="orderDetails" class="container mt-4 d-none">
+        <h3 id="orderTitle"></h3>
+        <table class="table table-bordered mt-3">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer Name</th>
+              <th>Product</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="orderContent"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-secondary mt-3" onclick="goBack()">Back</button>
+    </div>
+  </div>
+
+  <script>
+    const menuToggle = document.getElementById('menu-toggle');
+    const wrapper = document.getElementById('wrapper');
+    const orderDetails = document.getElementById('orderDetails');
+    const orderTitle = document.getElementById('orderTitle');
+    const orderContent = document.getElementById('orderContent');
+
+    menuToggle.addEventListener('click', () => {
+      wrapper.classList.toggle('toggled');
+    });
+
+    function loadOrders(type) {
+      const orders = {
+        Pending: [
+          { id: 1, customer: 'John Doe', product: 'Laptop', status: 'Pending' },
+          { id: 2, customer: 'Jane Smith', product: 'Phone', status: 'Pending' }
+        ],
+        Completed: [
+          { id: 3, customer: 'Alice Brown', product: 'Tablet', status: 'Completed' },
+          { id: 4, customer: 'Bob White', product: 'Camera', status: 'Completed' }
+        ],
+        Cancelled: [
+          { id: 5, customer: 'Chris Green', product: 'Headphones', status: 'Cancelled' },
+          { id: 6, customer: 'Dana Black', product: 'Smartwatch', status: 'Cancelled' }
+        ]
+      };
+
+      const selectedOrders = orders[type] || [];
+      orderContent.innerHTML = selectedOrders.map(order => `
+        <tr>
+          <td>${order.id}</td>
+          <td>${order.customer}</td>
+          <td>${order.product}</td>
+          <td>${order.status}</td>
+        </tr>
+      `).join('');
+
+      orderTitle.textContent = `${type} Orders`;
+      orderDetails.classList.remove('d-none');
+    }
+    
+    function goBack() {
+      window.history.back();
+    }
+
+    function goToDashboard() {
+      window.location.href = 'admin.html'; // Link to admin.html (replace with actual path)
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
