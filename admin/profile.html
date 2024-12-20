@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="profile.css">
 </head>
 <body>
-  <div class="container">
-    <h2 class="text-center my-4">Profile</h2>
-    <div class="profile-container">
+  <div class="container mt-4">
+    <h2 class="text-center mb-4">Profile</h2>
+    <div class="profile-container p-4">
       <div class="row">
         <div class="col-md-4 text-center">
           <img src="admin-image-placeholder.jpg" alt="Profile Picture" class="img-fluid rounded-circle mb-3" id="profilePicture" style="width: 150px; height: 150px;">
@@ -20,25 +21,66 @@
             <p><strong>Email:</strong> johndoe@example.com</p>
             <p><strong>Contact:</strong> +1234567890</p>
             <p><strong>Address:</strong> 123, Main Street, City, Country</p>
+            <button class="btn btn-primary btn-sm mt-2" id="editButton" onclick="editProfile()">Edit Profile</button>
+          </div>
+          <div id="editProfileForm" style="display: none;">
+            <form>
+              <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" value="John Doe" required>
+              </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" value="johndoe@example.com" required>
+              </div>
+              <div class="mb-3">
+                <label for="contact" class="form-label">Contact</label>
+                <input type="text" class="form-control" id="contact" value="+1234567890" required>
+              </div>
+              <div class="mb-3">
+                <label for="address" class="form-label">Address</label>
+                <textarea class="form-control" id="address" rows="3" required>123, Main Street, City, Country</textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+              <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+            </form>
           </div>
         </div>
       </div>
+      <button class="btn btn-secondary mt-3" style="position: absolute; bottom: 20px; right: 20px;" onclick="goBack()">Back</button>
     </div>
-    <button class="btn btn-secondary mt-3" onclick="goBack()">Back</button>
   </div>
-
   <script>
-    // Fetch the profile picture from localStorage and update the image on profile page
-    window.onload = function() {
-      const profilePic = localStorage.getItem('profilePicture');
-      if (profilePic) {
-        document.getElementById('profilePicture').src = profilePic;
-      }
-    };
+    document.getElementById('profilePicture').src = localStorage.getItem('profileImage') || 'admin-image-placeholder.jpg';
 
     function goBack() {
       window.history.back();
     }
+
+    function editProfile() {
+      document.getElementById('profileDetails').style.display = 'none';
+      document.getElementById('editProfileForm').style.display = 'block';
+      document.getElementById('editButton').style.display = 'none';
+    }
+
+    function cancelEdit() {
+      document.getElementById('profileDetails').style.display = 'block';
+      document.getElementById('editProfileForm').style.display = 'none';
+      document.getElementById('editButton').style.display = 'block';
+    }
+
+    function saveChanges() {
+      document.getElementById('profileDetails').style.display = 'block';
+      document.getElementById('editProfileForm').style.display = 'none';
+      document.getElementById('editButton').style.display = 'block';
+      alert('Changes saved successfully!');
+    }
+
+    window.addEventListener('storage', function(event) {
+      if (event.key === 'profileImage') {
+        document.getElementById('profilePicture').src = event.newValue || 'admin-image-placeholder.jpg';
+      }
+    });
   </script>
 </body>
 </html>
