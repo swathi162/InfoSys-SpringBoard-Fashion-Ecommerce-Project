@@ -1,0 +1,68 @@
+/* Dashboard Sidebar */
+.sidebar {
+    width: 300px; /* Increased sidebar width */
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    transition: transform 0.3s ease;
+  }
+  .sidebar .nav-link {
+    color: #fff;
+    text-decoration: none;
+  }
+  
+  .sidebar .nav-link:hover {
+    background-color: #333;
+  }
+  
+  .admin-panel{
+    overflow-y: scroll;/* Added scroll feature */
+  }
+
+  #wrapper.toggled #sidebar-wrapper {
+    transform: translateX(-300px); /* Adjusted for larger sidebar */
+  }
+  
+  /* Admin Image Styling */
+  .admin-image {
+    width: 50px; /* Increased size of admin image */
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  /* Style for Back button below the table */
+  #orderDetails .btn-back {
+    margin-top: 20px;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  /* Card Style for Dashboard */
+  .card {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    width: 100%; /* Full width for cards */
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+  }
+  
+  /* Container Styles */
+  #page-content {
+    margin-left: 300px; /* Increased margin for sidebar */
+    padding: 20px;
+    height: 100vh; 
+  }
+  
+  /* Cards Section - Adjust the width */
+  .dashboard-card {
+    height: 100%;
+    margin-bottom: 20px;
+  }  
+.card-width{
+  width: 500px;
+}
