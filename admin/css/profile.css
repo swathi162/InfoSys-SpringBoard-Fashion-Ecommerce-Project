@@ -1,18 +1,28 @@
 body {
-    background-color: #e9ecef;
-  }
-  
-  .profile-container {
-    margin: 50px auto;
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 900px;
-  }
-  
-  .profile-image {
-    border-radius: 50%;
-    width: 120px;
-    height: 120px;
-  }  
+  background-color: #e9ecef;
+}
+
+.profile-container {
+  margin: 0 auto;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
+  min-height: 500px; 
+  position: relative;
+}
+
+.profile-container form {
+  padding-bottom: 60px; 
+}
+
+.profile-image {
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+}
+
+button {
+  position: relative;
+}
