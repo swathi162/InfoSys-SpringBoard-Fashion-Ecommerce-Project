@@ -24,9 +24,7 @@
         <h2 class="text-center mb-4">Welcome to Admin Dashboard</h2>
         <p class="text-muted text-center">Manage your store efficiently using the tools provided.</p>
 
-        <!-- Admin profile image with file input -->
         <div class="text-center mb-4">
-          <!-- Set the image size to be smaller -->
           <img id="profileImage" src="admin-image-placeholder.jpg" alt="Admin Profile" class="img-fluid rounded" 
             style="cursor: pointer; width: 300px; height: 300px;" onclick="document.getElementById('fileInput').click();" onerror="this.src='default-dashboard.png';">
           <input type="file" id="fileInput" style="display: none;" accept="image/*" onchange="updateImage(event)">
@@ -41,15 +39,13 @@
       window.location.href = page;
     }
 
-    // Function to update the profile image when a new image is selected
     function updateImage(event) {
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-          // Store the image in localStorage
+        reader.onload = function(e) 
+        {
           localStorage.setItem('profilePicture', e.target.result);
-          // Update the image immediately in admin dashboard
           document.getElementById('profileImage').src = e.target.result;
         };
         reader.readAsDataURL(file);
