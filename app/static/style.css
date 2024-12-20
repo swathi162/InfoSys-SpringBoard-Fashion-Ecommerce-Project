@@ -218,3 +218,9 @@ div.credit a {
     color: #ffffff;
     box-shadow: inset 250px 0 0 0 #44c7f5;
 }
+
+.flex{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

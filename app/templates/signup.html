@@ -19,12 +19,16 @@
                         
                         <form method="post">
                             <p>
-                                <label>Full Name<span>*</span></label>
-                                <input type="text" placeholder="Your Name" required>
+                                <label>First Name<span>*</span></label>
+                                <input type="text" placeholder="First Name" name = "firstname" required>
                             </p>
                             <p>
-                                <label>Username<span>*</span></label>
-                                <input type="text" name = "username"  placeholder="Username" required>
+                                <label>Last Name<span>*</span></label>
+                                <input type="text" placeholder="Last Name" name = "lastname" required>
+                            </p>
+                            <p>
+                                <label>Email<span>*</span></label>
+                                <input type="email" name = "email"  placeholder="Email" required>
                             </p>
                             <p>
                                 <label>Password<span>*</span></label>
@@ -32,25 +36,40 @@
                             </p>
                             <p>
                                 <label>Address<span>*</span></label>
-                                <input type="text" placeholder="Your Address" required>
+                                <input type="text" placeholder="Your Address" name = "address" required>
                             </p>
                             <p>
                                 <label>Pincode<span>*</span></label>
-                                <input type="text" placeholder="Pincode" required>
+                                <input type="text" placeholder="Pincode" name = "pincode" required>
                             </p>
                             <p>
                                 <label>Role<span>*</span></label>
-                                <input type="radio" name="role" value="customer" id="customer" required>
-                                <label for="customer">Customer</label>
-                                <input type="radio" name="role" value="delivery" id="delivery" required>
-                                <label for="delivery">Delivery</label>
+                                <div class = "flex">
+                                    <label for="customer">Customer</label>
+                                    <input type="radio" name="role" value="customer" id="customer" required>
+                                </div>
+                                <div class = "flex">
+                                    <label for="delivery">Delivery</label>
+                                    <input type="radio" name="role" value="delivery" id="delivery" required>
+                                </div>
+                            </p>
+                            <p>
+                                {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    <ul>
+                                        {% for category, message in messages %}
+                                            <li class="{{ category }}">{{ message }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% endwith %}
                             </p>
                             <p>
                                 <input type="submit" value="Sign Up">
                             </p>
                         </form>
                     </div>
-                </div>
+                </div> 
             </div>
             
         </div>

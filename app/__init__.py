@@ -2,10 +2,12 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from . import models
+from itsdangerous import URLSafeTimedSerializer
 # Initialize extensions
 db = models.db
 
 login_manager = LoginManager()
+URL_SERIALIZER = None
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -17,6 +19,9 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    global URL_SERIALIZER
+    URL_SERIALIZER = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+ 
     # Initialize extensions with app
     db.init_app(app)
     login_manager.init_app(app)
