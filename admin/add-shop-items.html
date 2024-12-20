@@ -9,10 +9,8 @@
 </head>
 <body>
   <div class="wrapper">
-    <!-- Heading -->
     <h2 class="container-heading">Add Shop Items</h2>
 
-    <!-- Form Container -->
     <div class="container form-container">
       <form id="addItemForm">
         <div class="mb-3">
@@ -27,13 +25,14 @@
 
         <div class="mb-3">
           <label for="price" class="form-label">Price (in decimal)</label>
-          <input type="number" step="0.01" class="form-control" id="price" placeholder="Enter price" required>
+          <input type="number" step="0.01" class="form-control" id="price" placeholder="Enter price" min="1" required>
         </div>
 
         <div class="mb-3">
           <label for="stockQuantity" class="form-label">Stock Quantity</label>
-          <input type="number" class="form-control" id="stockQuantity" placeholder="Enter stock quantity" required>
+          <input type="number" class="form-control" id="stockQuantity" placeholder="Enter stock quantity" min="1" required>
         </div>
+        
 
         <div class="mb-3">
           <label for="brand" class="form-label">Brand</label>
@@ -46,8 +45,14 @@
         </div>
 
         <div class="mb-3">
-          <label for="updatedAt" class="form-label">Updated At</label>
-          <input type="datetime-local" class="form-control" id="updatedAt" required>
+          <label for="ratting" class="form-label">Ratting</label>
+          <input type="text" class="form-control" id="ratting" placeholder="Enter ratting (e.g., Excellent)" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="rating" class="form-label">Rating</label>
+          <div id="starRating" class="star-container"></div>
+          <input type="number" step="0.1" id="rating" class="form-control mt-2" placeholder="Enter rating (1-5)" min="1" max="5" required>
         </div>
 
         <div class="d-flex justify-content-between align-items-center mt-4 px-3">
@@ -73,6 +78,31 @@
     function getCurrentDateTime() {
       const now = new Date();
       return now.toISOString().slice(0, 16); // Format as "YYYY-MM-DDTHH:mm"
+    }
+
+    const ratingInput = document.getElementById("rating");
+    const starContainer = document.getElementById("starRating");
+
+    ratingInput.addEventListener("input", function () {
+      const ratingValue = parseFloat(ratingInput.value) || 0;
+      updateStars(ratingValue);
+    });
+
+    function updateStars(ratingValue) {
+      const fullStars = Math.floor(ratingValue);
+      const halfStar = ratingValue - fullStars >= 0.5 ? 1 : 0;
+      const emptyStars = 5 - fullStars - halfStar;
+
+      starContainer.innerHTML = "";
+      for (let i = 0; i < fullStars; i++) {
+        starContainer.innerHTML += '<span class="star full">&#9733;</span>';
+      }
+      for (let i = 0; i < halfStar; i++) {
+        starContainer.innerHTML += '<span class="star half">&#9733;</span>';
+      }
+      for (let i = 0; i < emptyStars; i++) {
+        starContainer.innerHTML += '<span class="star empty">&#9734;</span>';
+      }
     }
   </script>
 </body>
