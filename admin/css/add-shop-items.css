@@ -7,7 +7,6 @@ body {
   margin-top: 30px;
 }
 
-
 .container-heading {
   text-align: center;
   font-weight: 700; 
@@ -67,4 +66,25 @@ button {
 .d-flex {
   display: flex;
   gap: 1rem;
+}
+
+.star-container {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.star {
+  font-size: 1.5rem;
+  color: lightgray;
+}
+
+.star.full {
+  color: darkorange;
+}
+
+.star.half {
+  background: linear-gradient(to right, darkorange 50%, lightgray 50%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
