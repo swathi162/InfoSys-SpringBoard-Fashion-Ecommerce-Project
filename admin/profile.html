@@ -51,24 +51,29 @@
     </div>
   </div>
   <script>
+    // Load profile picture from localStorage or default
     document.getElementById('profilePicture').src = localStorage.getItem('profileImage') || 'admin-image-placeholder.jpg';
 
+    // Redirect to previous page
     function goBack() {
       window.history.back();
     }
 
+    // Edit profile function
     function editProfile() {
       document.getElementById('profileDetails').style.display = 'none';
       document.getElementById('editProfileForm').style.display = 'block';
       document.getElementById('editButton').style.display = 'none';
     }
 
+    // Cancel editing and revert to previous state
     function cancelEdit() {
       document.getElementById('profileDetails').style.display = 'block';
       document.getElementById('editProfileForm').style.display = 'none';
       document.getElementById('editButton').style.display = 'block';
     }
 
+    // Save changes and return to profile view
     function saveChanges() {
       document.getElementById('profileDetails').style.display = 'block';
       document.getElementById('editProfileForm').style.display = 'none';
@@ -76,6 +81,7 @@
       alert('Changes saved successfully!');
     }
 
+    // Update profile picture dynamically when changed in admin.html
     window.addEventListener('storage', function(event) {
       if (event.key === 'profileImage') {
         document.getElementById('profilePicture').src = event.newValue || 'admin-image-placeholder.jpg';
