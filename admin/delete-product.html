@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remove Product</title>
+  <link rel="stylesheet" href="del-update-product.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Remove Product</h1>
+    <form action="remove_product_action.php" method="POST">
+      <label for="product-id">Product ID</label>
+      <input type="text" id="product-id" name="product-id" placeholder="Enter Product ID" required>
+      
+      <label for="product-name">Product Name</label>
+      <input type="text" id="product-name" name="product-name" placeholder="Enter Product Name">
+      
+      <label for="product-category">Product Category</label>
+      <input type="text" id="product-category" name="product-category" placeholder="Enter Product Category">
+      
+      <label for="product-quantity">Quantity</label>
+      <input type="number" id="product-quantity" name="product-quantity" placeholder="Enter Quantity to Remove">
+      
+      <button type="submit" class="btn btn-remove">Remove Product</button>
+    </form>
+    <button class="btn-back" onclick="goBack()">Back</button>
+  </div>
+  <script>
+    function goBack() {
+      window.history.back();
+    }
+  </script>
+</body>
+</html>
