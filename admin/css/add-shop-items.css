@@ -9,9 +9,9 @@ body {
 
 .container-heading {
   text-align: center;
-  font-weight: 700; 
-  font-size: 2rem; 
-  margin-bottom: 20px; 
+  font-weight: 700;
+  font-size: 2rem;
+  margin-bottom: 20px;
   color: #333333;
 }
 
@@ -63,11 +63,6 @@ button {
   border-color: #545b62;
 }
 
-.d-flex {
-  display: flex;
-  gap: 1rem;
-}
-
 .star-container {
   display: flex;
   gap: 5px;
@@ -84,7 +79,7 @@ button {
 }
 
 .star.half {
-  background: linear-gradient(to right, darkorange 50%, lightgray 50%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
