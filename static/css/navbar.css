@@ -108,7 +108,7 @@ body {
     left: 0;
     background-color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
+    border-radius: 6px;
     display: none;
     z-index: 10;
 }
@@ -153,7 +153,7 @@ body {
     right: 0;
     background-color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
+    border-radius: 6px;
     display: none;
     z-index: 10;
     width: 200px;
@@ -206,7 +206,7 @@ body {
     right: 0; /* Align dropdown with the right side */
     background-color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
+    border-radius: 6px;
     display: none; /* Hidden by default */
     z-index: 1000; /* Ensure dropdown is on top */
     min-width: 200px;
@@ -240,4 +240,26 @@ body {
 .notifications-dropdown:hover .notifications-menu,
 .profile-dropdown:hover .dropdown {
     display: block;
+}
+
+/* Ensuring dropdown menus are hidden by default */
+.categories-menu, .notifications-menu, .profile-dropdown .dropdown {
+    display: none;
+}
+
+.categories-menu.show, .notifications-menu.show, .profile-dropdown .dropdown.show {
+    display: block;
+}
+
+/* Adjusting styles for the navbar */
+.navbar-right .icon-bell-button,
+.navbar-right .profile-photo-button {
+    position: relative;
+    cursor: pointer;
+}
+
+.navbar-right .profile-photo-button img {
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
 }
