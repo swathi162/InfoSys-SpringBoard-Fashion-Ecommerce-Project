@@ -6,6 +6,20 @@
   <title>Add Shop Items</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="add-shop-items.css">
+  <style>
+    /* Additional styling for success message */
+    .success-message {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      border-radius: 5px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
   <div class="wrapper">
@@ -13,53 +27,37 @@
 
     <div class="container form-container">
       <form id="addItemForm">
-        <div class="mb-3">
-          <label for="productName" class="form-label">Product Name</label>
-          <input type="text" class="form-control" id="productName" placeholder="Enter product name" required>
-        </div>
+        <label for="productId" class="form-label">Product ID</label>
+        <input type="text" class="form-control mb-3" id="productId" placeholder="Enter product ID" required>
 
-        <div class="mb-3">
-          <label for="description" class="form-label">Description</label>
-          <textarea class="form-control" id="description" rows="3" placeholder="Enter product description" required></textarea>
-        </div>
+        <label for="productName" class="form-label">Product Name</label>
+        <input type="text" class="form-control mb-3" id="productName" placeholder="Enter product name" required>
 
-        <div class="mb-3">
-          <label for="price" class="form-label">Price (in decimal)</label>
-          <input type="number" step="0.01" class="form-control" id="price" placeholder="Enter price" min="1" required>
-        </div>
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control mb-3" id="description" rows="3" placeholder="Enter product description" required></textarea>
 
-        <div class="mb-3">
-          <label for="stockQuantity" class="form-label">Stock Quantity</label>
-          <input type="number" class="form-control" id="stockQuantity" placeholder="Enter stock quantity" min="1" required>
-        </div>
-        
+        <label for="price" class="form-label">Price (in decimal)</label>
+        <input type="number" step="0.01" class="form-control mb-3" id="price" placeholder="Enter price" min="1" required>
 
-        <div class="mb-3">
-          <label for="brand" class="form-label">Brand</label>
-          <input type="text" class="form-control" id="brand" placeholder="Enter brand name" required>
-        </div>
+        <label for="stockQuantity" class="form-label">Stock Quantity</label>
+        <input type="number" class="form-control mb-3" id="stockQuantity" placeholder="Enter stock quantity" min="1" required>
 
-        <div class="mb-3">
-          <label for="categoryName" class="form-label">Category Name</label>
-          <input type="text" class="form-control" id="categoryName" placeholder="Enter category name" required>
-        </div>
+        <label for="brand" class="form-label">Brand</label>
+        <input type="text" class="form-control mb-3" id="brand" placeholder="Enter brand name" required>
 
-        <div class="mb-3">
-          <label for="ratting" class="form-label">Ratting</label>
-          <input type="text" class="form-control" id="ratting" placeholder="Enter ratting (e.g., Excellent)" required>
-        </div>
-
-        <div class="mb-3">
-          <label for="rating" class="form-label">Rating</label>
-          <div id="starRating" class="star-container"></div>
-          <input type="number" step="0.1" id="rating" class="form-control mt-2" placeholder="Enter rating (1-5)" min="1" max="5" required>
-        </div>
+        <label for="categoryName" class="form-label">Size</label>
+        <input type="text" class="form-control mb-3" id="categoryName" placeholder="Enter size" required>
 
         <div class="d-flex justify-content-between align-items-center mt-4 px-3">
-          <button type="submit" class="btn btn-primary">Add item</button>
+          <button type="submit" class="btn btn-primary">Add Item</button>
           <button type="button" class="btn btn-secondary" onclick="goBack()">Back</button>
         </div>
       </form>
+
+      <!-- Success message -->
+      <div id="successMessage" class="success-message">
+        Product added successfully!
+      </div>
     </div>
   </div>
 
@@ -70,40 +68,35 @@
 
     document.getElementById('addItemForm').addEventListener('submit', function (event) {
       event.preventDefault();
-      const updatedAtField = document.getElementById('updatedAt');
-      updatedAtField.value = getCurrentDateTime();
-      alert("Product details saved successfully!");
+
+      // Get all the input elements in the form
+      const productId = document.getElementById('productId').value;
+      const productName = document.getElementById('productName').value;
+      const description = document.getElementById('description').value;
+      const price = document.getElementById('price').value;
+      const stockQuantity = document.getElementById('stockQuantity').value;
+      const brand = document.getElementById('brand').value;
+      const categoryName = document.getElementById('categoryName').value;
+
+      // Check if all fields are filled
+      if (!productId || !productName || !description || !price || !stockQuantity || !brand || !categoryName) {
+        // Alert if any field is missing
+        alert('Please fill out all fields!');
+        return; // Prevent form submission
+      }
+
+      // Show success message at the bottom
+      const successMessage = document.getElementById('successMessage');
+      successMessage.style.display = 'block';
+
+      // Clear form fields
+      document.getElementById('addItemForm').reset();
+
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        successMessage.style.display = 'none';
+      }, 3000);
     });
-
-    function getCurrentDateTime() {
-      const now = new Date();
-      return now.toISOString().slice(0, 16); // Format as "YYYY-MM-DDTHH:mm"
-    }
-
-    const ratingInput = document.getElementById("rating");
-    const starContainer = document.getElementById("starRating");
-
-    ratingInput.addEventListener("input", function () {
-      const ratingValue = parseFloat(ratingInput.value) || 0;
-      updateStars(ratingValue);
-    });
-
-    function updateStars(ratingValue) {
-      const fullStars = Math.floor(ratingValue);
-      const halfStar = ratingValue - fullStars >= 0.5 ? 1 : 0;
-      const emptyStars = 5 - fullStars - halfStar;
-
-      starContainer.innerHTML = "";
-      for (let i = 0; i < fullStars; i++) {
-        starContainer.innerHTML += '<span class="star full">&#9733;</span>';
-      }
-      for (let i = 0; i < halfStar; i++) {
-        starContainer.innerHTML += '<span class="star half">&#9733;</span>';
-      }
-      for (let i = 0; i < emptyStars; i++) {
-        starContainer.innerHTML += '<span class="star empty">&#9734;</span>';
-      }
-    }
   </script>
 </body>
 </html>
