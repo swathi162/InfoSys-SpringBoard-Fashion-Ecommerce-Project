@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Signup Form{% endblock title %}
+{% block title %}Update Details{% endblock title %}
 {% block heads %}
 <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 {% endblock heads %}
@@ -8,18 +8,14 @@
     <div class="container">
         <div class="col-left">
             <div class="login-text">
-                <h2>Join Us</h2>
-                <p>Already have an account?</p>
-                <a class="btn" href="{{ url_for('auth.login') }}">Log In</a>
+                <h2>Update Details</h2>
             </div>
         </div>
         <div class="col-right">
             <div class="login-form">
-                <h2>Sign Up</h2>
-                
                 <form method="post">
                     {{ form.hidden_tag() }}
-
+                    
                     <p>
                         <label for="firstname">First Name<span>*</span></label>
                         {{ form.firstname(class_="form-control", placeholder="First Name") }}
@@ -31,7 +27,7 @@
                         </ul>
                         {% endif %}
                     </p>
-
+                    
                     <p>
                         <label for="lastname">Last Name<span>*</span></label>
                         {{ form.lastname(class_="form-control", placeholder="Last Name") }}
@@ -43,43 +39,7 @@
                         </ul>
                         {% endif %}
                     </p>
-
-                    <p>
-                        <label for="email">Email<span>*</span></label>
-                        {{ form.email(class_="form-control", placeholder="Email") }}
-                        {% if form.email.errors %}
-                        <ul>
-                            {% for error in form.email.errors %}
-                            <li class="error">{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-                    </p>
-
-                    <p>
-                        <label for="password">Password<span>*</span></label>
-                        {{ form.password(class_="form-control", placeholder="Password") }}
-                        {% if form.password.errors %}
-                        <ul>
-                            {% for error in form.password.errors %}
-                            <li class="error">{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-                    </p>
-
-                    <p>
-                        <label for="confirm_password">Confirm Password<span>*</span></label>
-                        {{ form.confirm_password(class_="form-control", placeholder="Confirm Password") }}
-                        {% if form.confirm_password.errors %}
-                        <ul>
-                            {% for error in form.confirm_password.errors %}
-                            <li class="error">{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-                    </p>
-
+                    
                     <p>
                         <label for="address">Address<span>*</span></label>
                         {{ form.address(class_="form-control", placeholder="Your Address") }}
@@ -91,7 +51,7 @@
                         </ul>
                         {% endif %}
                     </p>
-
+                    
                     <p>
                         <label for="pincode">Pincode<span>*</span></label>
                         {{ form.pincode(class_="form-control", placeholder="Pincode") }}
@@ -103,23 +63,7 @@
                         </ul>
                         {% endif %}
                     </p>
-
-                    <p>
-                        <label for="role">Role<span>*</span></label>
-                        {{ form.role(class_="form-select") }}
-                        {% if form.role.errors %}
-                        <ul>
-                            {% for error in form.role.errors %}
-                            <li class="error">{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-                    </p>
-
-                    <p>
-                        <input type="submit" value="Sign Up" />
-                    </p>
-
+                    
                     <p>
                         {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
@@ -131,9 +75,13 @@
                         {% endif %}
                         {% endwith %}
                     </p>
+                    
+                    <p>
+                        <input type="submit" value="Update">
+                    </p>
                 </form>
             </div>
-        </div> 
+        </div>
     </div>
 </div>
 {% endblock content %}
