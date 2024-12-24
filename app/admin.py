@@ -66,7 +66,7 @@ def remove_shop_items(product_id):
     finally:
         db.session.close()  # Ensure the session is closed
 
-@bp.route('/approveDelivery')
+@admin.route('/approveDelivery')
 @login_required
 @is_admin
 def approve_delivery():
@@ -79,7 +79,7 @@ def approve_delivery():
     return redirect(url_for('views.home'))
 
 
-@bp.route('/make_me_admin')
+@admin.route('/make_me_admin')
 @login_required
 def make_me_admin():
     if not current_user.isAdmin():

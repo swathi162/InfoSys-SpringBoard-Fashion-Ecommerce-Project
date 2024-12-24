@@ -2,7 +2,6 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from .models import db, User
-from . import views, auth, admin
 from itsdangerous import URLSafeTimedSerializer
 
 login_manager = LoginManager()
@@ -29,6 +28,8 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
 
+    #for solving circular import problem
+    from . import views, auth, admin
     app.register_blueprint(auth.bp)
     app.register_blueprint(views.bp)
     app.register_blueprint(admin.admin, url_prefix='/admin')
