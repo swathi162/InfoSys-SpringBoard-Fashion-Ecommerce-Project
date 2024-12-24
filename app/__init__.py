@@ -4,7 +4,9 @@ from flask_login import LoginManager
 from . import models
 from itsdangerous import URLSafeTimedSerializer
 # Initialize extensions
+
 db = models.db
+
 
 login_manager = LoginManager()
 URL_SERIALIZER = None
@@ -18,6 +20,7 @@ def create_app():
     app.secret_key = "Infosys-Springboard-5.0"
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # app = Flask(__name__, static_folder='app/static')
 
     global URL_SERIALIZER
     URL_SERIALIZER = URLSafeTimedSerializer(app.config['SECRET_KEY'])

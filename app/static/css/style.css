@@ -83,7 +83,7 @@ div.credit a {
         flex-direction: column;
         box-shadow: none;
     }
-    
+
     .login-1 .col-left,
     .login-1 .col-right {
         width: 100%;
@@ -91,7 +91,7 @@ div.credit a {
         -webkit-clip-path: none;
         clip-path: none;
     }
-    
+
     .login-1 .col-right {
         padding: 30px;
     }
