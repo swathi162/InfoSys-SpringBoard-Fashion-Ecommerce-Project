@@ -1,10 +1,11 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, get_flashed_messages, redirect, url_for
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, IntegerField, DateTimeField
 from wtforms.validators import DataRequired, InputRequired, NumberRange
-from .models import Product
-from . import db
+from flask_login import login_required, current_user
+from .models import db, User, Product
+from .decorators import is_admin
 
 # Define the admin blueprint
 admin = Blueprint('admin', __name__)
@@ -94,3 +95,24 @@ def remove_shop_items(product_id):
         return jsonify({'message': f'An error occurred: {str(e)}'}), 500
     finally:
         db.session.close()  # Ensure the session is closed
+
+@bp.route('/approveDelivery')
+@login_required
+@is_admin
+def approve_delivery():
+
+    delivery_user_request = User.query.filter_by(role='delivery', approved = False).all()
+
+    get_flashed_messages()
+    
+
+    return redirect(url_for('views.home'))
+
+
+@bp.route('/make_me_admin')
+@login_required
+def make_me_admin():
+    if not current_user.isAdmin():
+        current_user.role = 'admin'
+        db.session.commit()
+    return redirect(url_for('views.home'))

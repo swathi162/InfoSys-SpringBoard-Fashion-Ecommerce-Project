@@ -5,12 +5,30 @@ db = SQLAlchemy()
 
 #to be changed as per the ER Diagram Provided by the team
 class User(UserMixin,db.Model):
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
-    id = db.Column(db.Integer, primary_key=True, auto_increment=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    firstname = db.Column(db.String(80), nullable=False)
+    lastname = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    address = db.Column(db.String(120), nullable=False)
     password = db.Column(db.String(200), nullable=False)
+    role = db.Column(db.String(10), nullable=False)
+    pincode = db.Column(db.String(10), nullable=False)
+    approved = db.Column(db.Boolean, default=False)
+    def __init__(self, password, email, address, role, firstname, lastname, pincode):
+        self.password = password
+        self.email = email
+        self.address = address
+        self.role = role
+        self.firstname = firstname
+        self.lastname = lastname
+        self.pincode = pincode
+    
+    def isAdmin(self):
+        return self.role == 'admin'
+    
+    def isDeliveryPerson(self):
+        return self.role.lower() == 'delivery'
+
     
 # Product Model
 class Product(db.Model):
