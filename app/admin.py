@@ -1,8 +1,5 @@
 from flask import Blueprint, request, jsonify, get_flashed_messages, redirect, url_for
 from datetime import datetime
-from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, IntegerField, DateTimeField
-from wtforms.validators import DataRequired, InputRequired, NumberRange
 from flask_login import login_required, current_user
 from .models import db, User, Product
 from .decorators import is_admin
