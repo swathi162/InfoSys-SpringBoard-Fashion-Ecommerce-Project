@@ -41,6 +41,10 @@ body {
     box-shadow: 0 0 5px #999999;
 }
 
+.auth-box {
+    --bs-gutter-x: -0.5rem;
+}
+
 div.credit {
     position: relative;
     margin: 25px auto 0 auto;
@@ -83,7 +87,7 @@ div.credit a {
         flex-direction: column;
         box-shadow: none;
     }
-
+    
     .login-1 .col-left,
     .login-1 .col-right {
         width: 100%;
@@ -91,7 +95,7 @@ div.credit a {
         -webkit-clip-path: none;
         clip-path: none;
     }
-
+    
     .login-1 .col-right {
         padding: 30px;
     }
@@ -223,4 +227,8 @@ div.credit a {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.color-red{
+    color: red; 
 }
