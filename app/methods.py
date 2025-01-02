@@ -60,3 +60,46 @@ def send_token_email(to_email, user_name, verification_link):
         print("Email sent successfully!")
     except Exception as e:
         print(f"Failed to send email: {e}")
+
+def send_approval_email(to_email, user_name, approved):
+    global ema, p
+    from_email = ema
+    subject = "Account Approval"
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 465  # SSL port
+    smtp_user = ema
+    smtp_password = p  # Use the app password generated
+
+    # Create the email
+    msg = MIMEMultipart('alternative')
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+
+    # Create the HTML content
+    html_content = f"""
+    <html>
+    <head></head>
+    <body>
+        <p>Hi {user_name},</p>
+        <p>Your account has been {'approved' if approved else 'rejected'}.</p>
+        <p>Best regards,</p>
+        <p>OUR APP NAME<br/>
+    </body>
+    </html>
+    """
+
+    # Attach the HTML content to the email
+    msg.attach(MIMEText(html_content, 'html'))
+    
+    msg.add_header('X-Priority', '1')  # High priority
+    msg.add_header('X-Mailer', 'Python SMTP')
+
+    # Send the email
+    try:
+        with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+            server.login(smtp_user, smtp_password)
+            server.sendmail(from_email, to_email, msg.as_string())
+        print("Email sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")

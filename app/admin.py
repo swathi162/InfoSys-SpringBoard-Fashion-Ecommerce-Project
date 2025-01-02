@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify, get_flashed_messages, redirect, url_for
+from flask import Blueprint, request, jsonify, get_flashed_messages, redirect, url_for, render_template
 from datetime import datetime
 from flask_login import login_required, current_user
 from .models import db, User, Product
 from .decorators import is_admin
 from .forms import AddItemForm
+from .methods import send_approval_email
 
 
 # Define the admin blueprint
@@ -66,19 +67,53 @@ def remove_shop_items(product_id):
     finally:
         db.session.close()  # Ensure the session is closed
 
-@admin.route('/approveDelivery')
+@admin.route('/approve-delivery-dashboard')
 @login_required
 @is_admin
-def approve_delivery():
-
+def approve_delivery_dashboard():
     delivery_user_request = User.query.filter_by(role='delivery', approved = False).all()
-
     get_flashed_messages()
-    
+    return render_template('approve_delivery.html', delivery_persons=delivery_user_request)
 
-    return redirect(url_for('views.home'))
+@admin.route("/delete-user/<int:user_id>", methods = ["DELETE"])
+@login_required
+@is_admin
+def delete_user(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
 
+        db.session.delete(user)
+        db.session.commit()
+        send_approval_email(user.email, user.firstname, False)
+        return jsonify({'message': 'User deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'An error occurred: {str(e)}'}), 500
+    finally:
+        db.session.close()
 
+@admin.route("/approve-user/<int:user_id>", methods = ["POST"])
+@login_required
+@is_admin
+def approve_user(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
+
+        user.approved = True
+        db.session.commit()
+        send_approval_email(user.email, user.firstname, True)
+        return jsonify({'message': 'User approved successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'An error occurred: {str(e)}'}), 500
+    finally:
+        db.session.close()
+
+# dummy to be removed later
 @admin.route('/make_me_admin')
 @login_required
 def make_me_admin():
