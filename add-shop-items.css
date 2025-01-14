@@ -1,0 +1,90 @@
+body {
+  background-color: #f8f9fa;
+  font-family: Arial, sans-serif;
+}
+
+.wrapper {
+  margin-top: 30px;
+}
+
+.container-heading {
+  text-align: center;
+  font-weight: 700; 
+  font-size: 2rem; 
+  margin-bottom: 20px; 
+  color: #333333;
+}
+
+.form-container {
+  margin: 50px auto;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 700px;
+}
+
+.form-label {
+  font-weight: bold;
+  color: #555555;
+}
+
+.form-control {
+  border-radius: 5px;
+  border: 1px solid #cccccc;
+}
+
+textarea {
+  resize: none;
+}
+
+button {
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #004085;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+.d-flex {
+  display: flex;
+  gap: 1rem;
+}
+
+.star-container {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.star {
+  font-size: 1.5rem;
+  color: lightgray;
+}
+
+.star.full {
+  color: darkorange;
+}
+
+.star.half {
+  background: linear-gradient(to right, darkorange 50%, lightgray 50%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
