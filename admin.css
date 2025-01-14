@@ -1,0 +1,84 @@
+/* Updated admin.css with a white background and more attractive buttons */
+
+body {
+  background-color: white; /* White background for a clean and professional look */
+  font-family: Arial, sans-serif; /* Modern and readable font */
+  color: #333; /* Dark gray text for contrast */
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background-color: #4CAF50; /* Green header for freshness */
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+button {
+  background-color: #4CAF50; /* Green buttons */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background-color: #45a049; /* Darker green on hover */
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+button:active {
+  background-color: #3e8e41; /* Even darker green on click */
+}
+
+.card {
+  background-color: #f9f9f9; /* Light gray card background */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 10px 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Elevation effect */
+}
+
+input[type="text"], input[type="password"], select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+input[type="text"]:focus, input[type="password"]:focus, select:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+footer {
+  background-color: #f1f1f1;
+  color: #666;
+  text-align: center;
+  padding: 10px;
+  border-top: 1px solid #ddd;
+  margin-top: 20px;
+}

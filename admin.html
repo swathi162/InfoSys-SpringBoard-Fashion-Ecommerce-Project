@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="container">
+    <div class="row admin-container mt-5">
+
+      <div class="col-md-4 admin-sidebar p-4">
+        <h5 class="text-center mb-4">Admin Menu</h5>
+
+        <!-- Button to redirect to profile page (disabled functionality for now) -->
+        <button class="btn btn-primary w-100 mb-3" disabled>Profile</button>
+
+        <!-- Button to redirect to change password page (disabled functionality for now) -->
+        <button class="btn btn-secondary w-100 mb-3" disabled>Change Password</button>
+
+        <!-- Button to redirect to update details page (disabled functionality for now) -->
+        <button class="btn btn-secondary w-100 mb-3" disabled>Update Details</button>
+
+        <!-- Button to redirect to add shop items page -->
+        <button class="btn btn-secondary w-100 mb-3" onclick="redirectTo('{{ url_for('views.new_product') }}')">Add Shop Items</button>
+
+        <!-- Button to redirect to update shop items page -->
+        <button class="btn btn-secondary w-100 mb-3" onclick="redirectTo('{{ url_for('views.product_list') }}')">Products</button>
+
+        <!-- New button to view orders -->
+        <button class="btn btn-secondary w-100 mb-3" onclick="redirectTo('{{ url_for('views.view_orders') }}')">View Orders</button>
+
+      </div>
+
+      <div class="col-md-8 admin-content p-4">
+        <h2 class="text-center mb-4">Welcome to Admin Dashboard</h2>
+        <p class="text-muted text-center">Manage your store efficiently using the tools provided.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Function to handle redirection
+    function redirectTo(page) {
+      window.location.href = page;
+    }
+  </script>
+</body>
+</html>

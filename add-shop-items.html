@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Shop Items</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="add-shop-items.css">
+</head>
+<body>
+  <div class="wrapper">
+    <h2 class="container-heading">Add Shop Items</h2>
+
+    <div class="container form-container">
+      <form id="addItemForm" method="POST" action="{{ url_for('views.new_product') }}" enctype="multipart/form-data">
+        <!-- Product Name -->
+        <div class="mb-3">
+          <label for="productName" class="form-label">Product Name</label>
+          <input type="text" class="form-control" id="productName" name="name" placeholder="Enter product name" required>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter product description" required></textarea>
+        </div>
+
+        <!-- Price -->
+        <div class="mb-3">
+          <label for="price" class="form-label">Price (in decimal)</label>
+          <input type="number" step="0.01" class="form-control" id="price" name="price" placeholder="Enter price" min="1" required>
+        </div>
+
+        <!-- Stock Quantity -->
+        <div class="mb-3">
+          <label for="stockQuantity" class="form-label">Stock Quantity</label>
+          <input type="number" class="form-control" id="stockQuantity" name="stock_quantity" placeholder="Enter stock quantity" min="1" required>
+        </div>
+
+        <!-- Brand -->
+        <div class="mb-3">
+          <label for="brand" class="form-label">Brand</label>
+          <input type="text" class="form-control" id="brand" name="brand" placeholder="Enter brand name" required>
+        </div>
+
+        <!-- Category -->
+        <div class="mb-3">
+          <label for="categoryName" class="form-label">Category Name</label>
+          <input type="text" class="form-control" id="categoryName" name="category" placeholder="Enter category name" required>
+        </div>
+
+        <!-- Size -->
+        <div class="mb-3">
+          <label for="size" class="form-label">Size</label>
+          <input type="text" class="form-control" id="size" name="size" placeholder="Enter size" required>
+        </div>
+
+        <!-- Target User -->
+        <div class="mb-3">
+          <label for="targetUser" class="form-label">Target User</label>
+          <input type="text" class="form-control" id="targetUser" name="target_user" placeholder="Enter target user" required>
+        </div>
+
+        <!-- Type -->
+        <div class="mb-3">
+          <label for="type" class="form-label">Type</label>
+          <input type="text" class="form-control" id="type" name="type" placeholder="Enter type" required>
+        </div>
+
+        <!-- Rating -->
+        <div class="mb-3">
+          <label for="rating" class="form-label">Rating</label>
+          <div id="starRating" class="star-container"></div>
+          <input type="number" step="0.1" id="rating" name="rating" class="form-control mt-2" placeholder="Enter rating (1-5)" min="1" max="5" required>
+        </div>
+
+        <!-- Image -->
+        <div class="mb-3">
+          <label for="image" class="form-label">Upload Image</label>
+          <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+        </div>
+
+        <!-- Details -->
+        <div class="mb-3">
+          <label for="details" class="form-label">Details</label>
+          <textarea class="form-control" id="details" name="details" rows="4" placeholder="Enter product details"></textarea>
+        </div>
+
+        <!-- Submit and Back Buttons -->
+        <div class="d-flex justify-content-between align-items-center mt-4 px-3">
+          <button type="submit" class="btn btn-primary">Add item</button>
+          <button type="button" class="btn btn-secondary" onclick="goBack()">Back</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function goBack() {
+      window.history.back();
+    }
+
+    const ratingInput = document.getElementById("rating");
+    const starContainer = document.getElementById("starRating");
+
+    ratingInput.addEventListener("input", function () {
+      const ratingValue = parseFloat(ratingInput.value) || 0;
+      updateStars(ratingValue);
+    });
+
+    function updateStars(ratingValue) {
+      const fullStars = Math.floor(ratingValue);
+      const halfStar = ratingValue - fullStars >= 0.5 ? 1 : 0;
+      const emptyStars = 5 - fullStars - halfStar;
+
+      starContainer.innerHTML = "";
+      for (let i = 0; i < fullStars; i++) {
+        starContainer.innerHTML += '<span class="star full">&#9733;</span>';
+      }
+      for (let i = 0; i < halfStar; i++) {
+        starContainer.innerHTML += '<span class="star half">&#9733;</span>';
+      }
+      for (let i = 0; i < emptyStars; i++) {
+        starContainer.innerHTML += '<span class="star empty">&#9734;</span>';
+      }
+    }
+  </script>
+</body>
+</html>
