@@ -12,5 +12,7 @@ Thumbs.db  # For Windows users
 
 #Ignore idea folders
 .idea
+.venv/
+venv/
 
 app/secret.txt
