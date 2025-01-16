@@ -49,8 +49,10 @@ class Product(db.Model):
     details = db.Column(db.Text)
     colour = db.Column(db.String(50), nullable=False)
     category = db.Column(db.String(100),nullable=False)
+    rating = db.Column(db.String(100))
 
-    def __init__(self, name, price, stock_quantity, brand, size, target_user, type, image, description, details, colour, category):
+
+    def __init__(self, name, price, stock_quantity, brand, size, target_user, type, image, description, details, colour, category, rating):
         self.name = name
         self.price = price
         self.stock_quantity = stock_quantity
@@ -63,6 +65,7 @@ class Product(db.Model):
         self.details = details
         self.colour = colour
         self.category = category
+        self.rating = rating
 
     def __repr__(self):
         return self.name

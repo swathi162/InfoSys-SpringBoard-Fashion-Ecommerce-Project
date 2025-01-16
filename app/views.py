@@ -572,6 +572,7 @@ def new_product():
                 type=type_,
                 rating=rating,
                 category=category,
+                colour="nocolour",
                 image=image_filename
             )
 
