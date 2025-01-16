@@ -5,7 +5,10 @@ from .forms import UpdateUserForm
 from .decorators import is_delivery_person
 from .constants import STATES_CITY
 bp = Blueprint('views', __name__)
+from .models import Product, Order
+import os
 import logging
+from werkzeug.utils import secure_filename
 
 
 # Dummy Product Data (for rendering)
@@ -511,3 +514,399 @@ def category(category):
 @is_delivery_person
 def deliver():
     return Response("Delivered", status=200)
+
+## Team 3
+
+@bp.route('/admin')
+@login_required
+def index():
+    return render_template('admin.html')
+
+@bp.route('/product/new', methods=['GET', 'POST'])
+@login_required
+
+def new_product():
+    if request.method == 'POST':
+        try:
+            # Extract form fields
+            name = request.form['name']
+            description = request.form['description']
+            details = request.form['details']
+            price = float(request.form['price'])
+            stock_quantity = int(request.form['stock_quantity'])
+            brand = request.form['brand']
+            size = request.form['size']
+            target_user = request.form['target_user']
+            type_ = request.form['type']
+            rating = request.form.get('rating', 'not rated')
+            category = request.form['category']
+
+            # Validate required fields
+            if not all([name, description, brand, category, size, target_user, type_]):
+                return "Missing required fields", 400
+
+            # Handle image upload (if exists)
+            image = request.files.get('image')
+            image_filename = None
+            if image:
+                # Ensure the 'static/uploads' directory exists
+                uploads_dir = os.path.join('static', 'uploads')
+                if not os.path.exists(uploads_dir):
+                    os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
+
+                # Sanitize the image filename and save it
+                image_filename = secure_filename(image.filename)
+                image_path = os.path.join(uploads_dir, image_filename)
+                image.save(image_path)
+
+            # Create the product object
+            new_product = Product(
+                name=name,
+                description=description,
+                details=details,
+                price=price,
+                stock_quantity=stock_quantity,
+                brand=brand,
+                size=size,
+                target_user=target_user,
+                type=type_,
+                rating=rating,
+                category=category,
+                image=image_filename
+            )
+
+            # Commit to the database
+            db.session.add(new_product)
+            db.session.commit()
+
+            flash("Product added successfully!", "success")
+            return redirect(url_for('views.product_list'))
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error while adding product: {e}")  # Log the error to the console
+            return f"Error while adding product: {e}", 500  # Return the error message
+
+    return render_template('add-shop-items.html')
+##########
+@bp.route('/product/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+
+def update_product(id):
+    # Fetch the product from the database by its ID
+    product = Product.query.get_or_404(id)
+
+    if request.method == 'POST':
+        try:
+            # Extract form fields
+            name = request.form['name']
+            description = request.form['description']
+            details = request.form['details']
+            price = float(request.form['price'])
+            stock_quantity = int(request.form['stock_quantity'])
+            brand = request.form['brand']
+            size = request.form['size']
+            target_user = request.form['target_user']
+            type_ = request.form['type']
+            rating = float(request.form['rating'])
+            category = request.form['category']
+
+            # Validate required fields
+            if not all([name, description, brand, category, size, target_user, type_]):
+                return "Missing required fields", 400
+
+            # Handle image upload (if exists)
+            image_filename = product.image  # Retain the old image filename if no new image is uploaded
+            image = request.files.get('image')
+            if image:
+                # Ensure the 'static/uploads' directory exists
+                uploads_dir = os.path.join('static', 'uploads')
+                if not os.path.exists(uploads_dir):
+                    os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
+
+                # Sanitize the image filename and save it
+                image_filename = secure_filename(image.filename)
+                image_path = os.path.join(uploads_dir, image_filename)
+                image.save(image_path)
+
+            # Update the product object with new data
+            product.name = name
+            product.description = description
+            product.details = details
+            product.price = price
+            product.stock_quantity = stock_quantity
+            product.brand = brand
+            product.size = size
+            product.target_user = target_user
+            product.type = type_
+            product.rating = rating
+            product.category = category
+            product.image = image_filename  # Update the image (if new image uploaded)
+
+            # Commit to the database
+            db.session.commit()
+
+            flash("Product updated successfully!", "success")
+            return redirect(url_for('views.product_list'))  # Redirect to the product list page
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error occurred while updating product: {e}")
+            return f"Error while updating product: {e}", 500  # Internal error
+
+    # If it's a GET request, render the form with the current product data
+    return render_template('update-product.html', product=product)
+############
+@bp.route('/products', methods=['GET'])
+@login_required
+
+def product_list():
+
+    products = Product.query.all()
+
+    # Render the template to display all products
+    return render_template('product-list.html', products=products)
+
+###################################
+@bp.route('/product/delete/<int:id>', methods=['POST'])
+@login_required
+
+def delete_product(id):
+    # Fetch the product from the database by its ID
+    product = Product.query.get_or_404(id)
+
+    try:
+        # Delete the product
+        db.session.delete(product)
+        db.session.commit()
+
+        print(f"Product {id} deleted successfully")
+        return redirect(url_for('views.product_list'))  # Redirect back to the product list page
+
+    except Exception as e:
+        print(f"Error occurred while deleting product: {e}")
+        db.session.rollback()
+        return "Error while deleting product", 500  # Internal server error
+
+
+
+
+
+
+#<a href="{{ url_for('views.view_product', id=product.id) }}" class="btn btn-info btn-sm">View</a>
+
+
+
+
+@bp.route('/partner_dash')
+def dashboard():
+    # Fetch user info (hardcoded for now, you can change this later)
+    user = {'name': current_user.firstname, 'pincode':current_user.pincode}
+
+    # Fetch stats from the database
+    stats = Stats.query.first()  # Assuming there's only one stats row for simplicity
+    if not stats:
+        stats = Stats(total_orders=0, delivered=0, in_transit=0, failed=0)
+        db.session.add(stats)
+        db.session.commit()
+
+    # Fetch orders from the database
+    orders = Order.query.filter_by(pincode=user['pincode']).all()
+
+    # Only allow orders in the user's state (California in this case) to be viewed or delivered
+    return render_template('delivery_person_dashboard.html', user=user, stats=stats, orders=orders)
+
+
+@bp.route('/update_status/<int:order_id>', methods=['POST'])
+def update_status(order_id):
+    new_status = request.form['status']  # Get the selected status from the form
+    order = Order.query.get(order_id)  # Fetch the order by ID from the database
+
+    if order:
+        # Update the order's status
+        order.status = new_status
+
+        # If the status is "Delivered Successfully", send a thank-you email
+        if new_status == 'Delivered Successfully':
+            send_thank_you_email(order)
+
+        db.session.commit()
+
+        # Update stats (optional, but if required to refresh stats)
+        update_stats()
+
+    return redirect(url_for('views.dashboard'))  # Redirect back to the dashboard or the orders list
+
+
+def update_stats():
+    # Recalculate stats for the dashboard or stats view
+    stats = Stats.query.first()
+    stats.total_orders = Order.query.count()
+    stats.delivered = Order.query.filter_by(status='Delivered Successfully').count()
+    stats.in_transit = Order.query.filter_by(status='In Transit').count()
+    stats.failed = Order.query.filter_by(status='Failed').count()
+    db.session.commit()
+
+
+@bp.route('/view_orders', methods=['GET'])
+
+def view_orders():
+
+    orders = Order.query.all()
+
+    # Render the template to display all orders
+    return render_template('view_order.html', orders=orders)
+
+# @bp.route('/update_status/<int:order_id>', methods=['POST'])
+# def update_status(order_id):
+#     new_status = request.form['status']
+#     order = Order.query.get(order_id)
+#
+#     if order:
+#         # Update the order status
+#         order.status = new_status
+#         db.session.commit()
+#
+#         # If status is "Delivered Successfully", send an email to the user
+#         if new_status == "Delivered Successfully":
+#             send_rating_email(order)
+#
+#         # Update stats if needed
+#         update_stats()
+#
+#     return redirect(url_for('views.dashboard'))
+#
+#
+# def send_rating_email(order):
+#     user_email = order.user.email  # Get the user's email (assuming the order has a user reference)
+#     product = order.product  # Get the product related to the order
+#
+#     # Create the message
+#     subject = "Your Order has been Delivered! Please Rate Your Product"
+#     body = f"""
+#     Hi {order.user.first_name},
+#
+#     We hope you're enjoying your new product: {product.name}.
+#
+#     Could you please rate the product from 1 to 5 (1 being the worst, 5 being the best)?
+#     Your feedback helps us improve our products and services!
+#
+#     Click the link below to rate the product:
+#     {url_for('views.submit_rating', order_id=order.id, _external=True)}
+#
+#     Thank you for your support!
+#     """
+#
+#     # Send the email
+#     msg = Message(subject, recipients=[user_email], body=body)
+#     mail.send(msg)
+#
+#
+#####################################mail###################
+
+
+
+@bp.route('/rate_product/<int:order_id>', methods=['GET', 'POST'])
+
+def rate_product(order_id):
+    # Fetch the order using the order_id
+    order = Order.query.get_or_404(order_id)
+
+    # Fetch the product associated with the order
+    product = Product.query.get_or_404(order.product_id)
+
+    if request.method == 'POST':
+        try:
+            # Get the user's rating from the form (rating is expected to be between 1 and 5)
+            rating = request.form['rating']  # Assumes the form will send a 'rating' field as 1, 2, 3, 4, or 5
+            customer_rating = int(rating)  # Convert rating to integer
+
+            # Check if the product has already been rated
+            if product.rating == 'not rated':
+                # If not rated yet, store the customer's rating
+                product.rating = str(customer_rating)
+            else:
+                # If rated, calculate the new average rating
+                current_rating = float(product.rating)
+                new_rating = (current_rating + customer_rating) / 2
+                product.rating = str(new_rating)
+
+            # Commit the changes to the database
+            db.session.commit()
+
+            # Flash success message and redirect to the product page or a thank-you page
+            flash(f"Thank you for rating! Your rating of {customer_rating} has been saved.", "success")
+            return redirect(url_for('auth.login'))
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error occurred while rating the product: {e}")
+            flash("An error occurred while submitting your rating. Please try again later.", "danger")
+            return redirect(url_for('views.view_product', id=product.id))
+
+    return render_template('rate_product.html', product=product,order=order)
+
+def send_thank_you_email(order):
+    """
+    Function to send a thank you email when an order is delivered.
+
+    """
+    rate_product_url = url_for('views.rate_product', order_id=order.id, _external=True)
+
+    msg = Message(
+        subject="Thank You for Shopping!",
+        recipients=[order.mail]  # Send email to the customer's email
+    )
+
+    # Set the body of the email
+    msg.body = f"""
+    Dear {order.customer_name},
+
+    Thank you for shopping with us! We hope you are happy with your purchase.
+    
+    We would love to hear your feedback! Please take a moment to rate the product you purchased:
+
+    {rate_product_url}
+
+
+
+    If you have any questions or need assistance, feel free to contact us.
+
+    Best regards,
+    Your Company Name
+    """
+
+    try:
+        with current_app.app_context():
+            current_app.extensions['mail'].send(msg)
+        print("Thank you email sent successfully!")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+
+
+#
+# @bp.route('/update_status/<int:order_id>', methods=['POST'])
+# def update_status(order_id):
+#     new_status = request.form['status']  # Get the selected status from the form
+#     order = Order.query.get(order_id)  # Fetch the order by ID from the database
+#
+#     if order:
+#         # Update the order's status
+#         order.status = new_status
+#         db.session.commit()
+#
+#         # Update stats (optional, but if required to refresh stats)
+#         update_stats()
+#
+#     return redirect(url_for('views.dashboard'))  # Redirect back to the dashboard or the orders list
+#
+#
+# def update_stats():
+#     # Recalculate stats for the dashboard or stats view
+#     stats = Stats.query.first()
+#     stats.total_orders = Order.query.count()
+#     stats.delivered = Order.query.filter_by(status='Delivered Successfully').count()
+#     stats.in_transit = Order.query.filter_by(status='In Transit').count()
+#     stats.failed = Order.query.filter_by(status='Failed').count()
+#     db.session.commit()
