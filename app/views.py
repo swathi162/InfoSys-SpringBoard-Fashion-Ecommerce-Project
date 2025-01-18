@@ -5,7 +5,7 @@ from .forms import UpdateUserForm
 from .decorators import is_delivery_person
 from .constants import STATES_CITY
 bp = Blueprint('views', __name__)
-from .models import Product, Order
+from .models import Product, Order, Stats
 import os
 import logging
 from werkzeug.utils import secure_filename
@@ -609,7 +609,6 @@ def update_product(id):
             size = request.form['size']
             target_user = request.form['target_user']
             type_ = request.form['type']
-            rating = float(request.form['rating'])
             category = request.form['category']
 
             # Validate required fields
@@ -640,7 +639,6 @@ def update_product(id):
             product.size = size
             product.target_user = target_user
             product.type = type_
-            product.rating = rating
             product.category = category
             product.image = image_filename  # Update the image (if new image uploaded)
 
@@ -657,6 +655,171 @@ def update_product(id):
 
     # If it's a GET request, render the form with the current product data
     return render_template('update-product.html', product=product)
+# @bp.route('/product/edit/<int:id>', methods=['GET', 'POST'])
+# @login_required
+# def update_product(id):
+#     # Fetch the product from the database by its ID
+#     try:
+#         print(f"Fetching product with ID: {id}")
+#         product = Product.query.get_or_404(id)
+#     except Exception as e:
+#         print(f"Error fetching product: {e}")
+#         return f"Error fetching product: {e}", 500
+
+#     if request.method == 'POST':
+#         try:
+#             print("Request method is POST")
+#             print("Form data received:", request.form)
+
+#             # Extract form fields
+#             name = request.form['name']
+#             description = request.form['description']
+#             details = request.form['details']
+#             price = float(request.form['price'])  # Check if this field exists and is valid
+#             stock_quantity = int(request.form['stock_quantity'])  # Same here
+#             brand = request.form['brand']
+#             size = request.form['size']
+#             target_user = request.form['target_user']
+#             type_ = request.form['type']
+#             rating = float(request.form['rating'])
+#             category = request.form['category']
+
+#             print(f"Extracted fields: name={name}, description={description}, price={price}, ...")
+
+#             # Validate required fields
+#             if not all([name, description, brand, category, size, target_user, type_]):
+#                 print("Missing required fields")
+#                 return "Missing required fields", 400
+
+#             # Handle image upload (if exists)
+#             image_filename = product.image  # Retain the old image filename if no new image is uploaded
+#             try:
+#                 image = request.files.get('image')
+#                 if image:
+#                     print(f"Image file received: {image.filename}")
+#                     uploads_dir = os.path.join('static', 'uploads')
+#                     if not os.path.exists(uploads_dir):
+#                         os.makedirs(uploads_dir)
+#                         print(f"Created directory: {uploads_dir}")
+
+#                     # Save the image
+#                     image_filename = secure_filename(image.filename)
+#                     image_path = os.path.join(uploads_dir, image_filename)
+#                     image.save(image_path)
+#                     print(f"Saved image at: {image_path}")
+#             except Exception as e:
+#                 print(f"Error handling image upload: {e}")
+#                 return f"Error handling image upload: {e}", 500
+
+#             # Update the product object
+#             product.name = name
+#             product.description = description
+#             product.details = details
+#             product.price = price
+#             product.stock_quantity = stock_quantity
+#             product.brand = brand
+#             product.size = size
+#             product.target_user = target_user
+#             product.type = type_
+#             product.rating = rating
+#             product.category = category
+#             product.image = image_filename
+
+#             # Commit to the database
+#             try:
+#                 db.session.commit()
+#                 print("Product updated successfully!")
+#                 flash("Product updated successfully!", "success")
+#                 return redirect(url_for('views.product_list'))
+#             except Exception as e:
+#                 print(f"Error committing to database: {e}")
+#                 db.session.rollback()
+#                 return f"Database error: {e}", 500
+
+#         except KeyError as e:
+#             print(f"Missing field in form: {e}")
+#             return f"Missing field in form: {e}", 400
+#         except ValueError as e:
+#             print(f"Invalid value provided: {e}")
+#             return f"Invalid value provided: {e}", 400
+#         except Exception as e:
+#             print(f"General error: {e}")
+#             return f"Error: {e}", 500
+
+#     # If it's a GET request, render the form with the current product data
+#     print(f"Rendering update form for product ID: {id}")
+#     return render_template('update-product.html', product=product)
+
+# @bp.route('/product/edit/<int:id>', methods=['GET', 'POST'])
+# @login_required
+# def update_product(id):
+#     # Fetch the product from the database by its ID
+#     print(request.form)
+#     product = Product.query.get_or_404(id)
+
+#     if request.method == 'POST':
+#         try:
+#             # Extract form fields
+#             name = request.form['name']
+#             description = request.form['description']
+#             details = request.form['details']
+#             price = float(request.form['price'])
+#             stock_quantity = int(request.form['stock_quantity'])
+#             brand = request.form['brand']
+#             size = request.form['size']
+#             target_user = request.form['target_user']
+#             type_ = request.form['type']
+#             rating = float(request.form['rating'])
+#             category = request.form['category']
+
+#             print("")
+
+#             # Validate required fields
+#             if not all([name, description, brand, category, size, target_user, type_]):
+#                 print("Missing required Fields...")
+#                 return "Missing required fields", 400
+
+#             # Handle image upload (if exists)
+#             image_filename = product.image  # Retain the old image filename if no new image is uploaded
+#             image = request.files.get('image')
+#             if image:
+#                 # Ensure the 'static/uploads' directory exists
+#                 uploads_dir = os.path.join('static', 'uploads')
+#                 if not os.path.exists(uploads_dir):
+#                     os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
+
+#                 # Sanitize the image filename and save it
+#                 image_filename = secure_filename(image.filename)
+#                 image_path = os.path.join(uploads_dir, image_filename)
+#                 image.save(image_path)
+#             print("It's fine upto here...")
+#             # Update the product object with new data
+#             product.name = name
+#             product.description = description
+#             product.details = details
+#             product.price = price
+#             product.stock_quantity = stock_quantity
+#             product.brand = brand
+#             product.size = size
+#             product.target_user = target_user
+#             product.type = type_
+#             product.rating = rating
+#             product.category = category
+#             product.image = image_filename  # Update the image (if new image uploaded)
+
+#             # Commit to the database
+#             db.session.commit()
+
+#             flash("Product updated successfully!", "success")
+#             return redirect(url_for('views.product_list'))  # Redirect to the product list page
+
+#         except Exception as e:
+#             db.session.rollback()
+#             print(f"Error occurred while updating product: {e}")
+#             return f"Error while updating product: {e}", 500  # Internal error
+
+#     # If it's a GET request, render the form with the current product data
+#     return render_template('update-product.html', product=product)
 ############
 @bp.route('/products', methods=['GET'])
 @login_required
@@ -750,13 +913,22 @@ def update_stats():
 
 
 @bp.route('/view_orders', methods=['GET'])
-
 def view_orders():
-
     orders = Order.query.all()
+    orders_list = [order.__dict__ for order in orders]
 
-    # Render the template to display all orders
-    return render_template('view_order.html', orders=orders)
+    # Remove the SQLAlchemy internal attribute '_sa_instance_state'
+    for order in orders_list:
+        order.pop('_sa_instance_state', None)
+
+    return jsonify(orders_list)
+
+# def view_orders():
+
+#     orders = Order.query.all()
+#     print(orders)
+#     # Render the template to display all orders
+#     return render_template('view_order.html', orders=orders)
 
 # @bp.route('/update_status/<int:order_id>', methods=['POST'])
 # def update_status(order_id):

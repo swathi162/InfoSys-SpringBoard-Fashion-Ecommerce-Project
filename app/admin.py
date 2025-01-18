@@ -323,7 +323,7 @@ def create_dummy_products():
         name, price, stock_quantity, brand, size, target_user, type_, image, description, details, colour, category = generate_random_product_data()
         product = Product(name=name, price=price, stock_quantity=stock_quantity, brand=brand, size=size,
                           target_user=target_user, type=type_, image=image, description=description,
-                          details=details, colour=colour, category=category)
+                          details=details, colour=colour,rating=1, category=category)
         try:
             db.session.add(product)
             db.session.commit()
@@ -337,7 +337,6 @@ def create_dummy_products():
 
 @admin.route('/create-dummy-orders')
 @login_required
-@is_admin
 def create_dummy_orders():
     # Get all users and products to pick from randomly
     users = User.query.all()

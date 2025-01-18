@@ -75,21 +75,9 @@ class Order(db.Model):
     _tablename_ = 'orders'
 
     id = db.Column(db.Integer, primary_key=True)
-
-
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
-    # customer_name = db.Column(db.String(100), nullable=False)
-    # place = db.Column(db.String(100), nullable=False)
-    # state = db.Column(db.String(100), nullable=False)
-    # pincode = db.Column(db.Float, nullable=False)
-    # district = db.Column(db.String(100), nullable=False)
-    # city = db.Column(db.String(100), nullable=False)
-
     price = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(50), nullable=False)
-
-    #another required attributes
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable = False)
     order_date = db.Column(db.DateTime, nullable = False, default = datetime.now(timezone.utc))
 
@@ -104,3 +92,12 @@ class Order(db.Model):
         self.status = status
         self.order_date = order_date
 
+
+class Stats(db.Model):
+    __tablename__ = 'stats'
+
+    id = db.Column(db.Integer, primary_key=True)
+    total_orders = db.Column(db.Integer, default=0)
+    delivered = db.Column(db.Integer, default=0)
+    in_transit = db.Column(db.Integer, default=0)
+    failed = db.Column(db.Integer, default=0)
