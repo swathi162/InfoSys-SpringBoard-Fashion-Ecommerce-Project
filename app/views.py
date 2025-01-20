@@ -1087,3 +1087,5 @@ def send_thank_you_email(order):
 #     stats.in_transit = Order.query.filter_by(status='In Transit').count()
 #     stats.failed = Order.query.filter_by(status='Failed').count()
 #     db.session.commit()
+
+
