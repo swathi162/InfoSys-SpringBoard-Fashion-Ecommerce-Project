@@ -71,26 +71,83 @@ class Product(db.Model):
         return self.name
         
 
-class Order(db.Model):
-    _tablename_ = 'orders'
+# class Order(db.Model):
+#     _tablename_ = 'orders'
 
+#     id = db.Column(db.Integer, primary_key=True)
+#     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     price = db.Column(db.Float, nullable=False)
+#     status = db.Column(db.String(50), nullable=False)
+#     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable = False)
+#     order_date = db.Column(db.DateTime, nullable = False, default = datetime.now(timezone.utc))
+
+#     #establising the relationsip
+#     user = db.relationship('User', backref = db.backref('orders', lazy = True))
+#     product = db.relationship('Product', backref = db.backref('orders', lazy = True))
+
+#     def __init__(self, customer_id, price, status, product_id, order_date = datetime.now(timezone.utc)):
+#         self.customer_id = customer_id
+#         self.product_id = product_id
+#         self.price = price
+#         self.status = status
+#         self.order_date = order_date
+
+class Order(db.Model):
+    __tablename__ = 'orders'
+
+    # Primary Key
     id = db.Column(db.Integer, primary_key=True)
+
+    # Foreign Keys
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+
+    # Order Details
     price = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(50), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable = False)
-    order_date = db.Column(db.DateTime, nullable = False, default = datetime.now(timezone.utc))
+    order_date = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
 
-    #establising the relationsip
-    user = db.relationship('User', backref = db.backref('orders', lazy = True))
-    product = db.relationship('Product', backref = db.backref('orders', lazy = True))
+    # Additional Columns
+    customer_name = db.Column(db.String(100), nullable=False)
+    place = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(100), nullable=False)
+    pincode = db.Column(db.Float, nullable=False)
+    district = db.Column(db.Float, nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    mail = db.Column(db.String(50), nullable=False)
 
-    def __init__(self, customer_id, price, status, product_id, order_date = datetime.now(timezone.utc)):
+    # Establishing the relationship
+    user = db.relationship('User', backref=db.backref('orders', lazy=True))
+    product = db.relationship('Product', backref=db.backref('orders', lazy=True))
+
+    def __init__(
+        self,
+        customer_id,
+        customer_name,
+        place,
+        state,
+        pincode,
+        district,
+        city,
+        price,
+        status,
+        product_id,
+        order_date=datetime.now(timezone.utc),
+        mail=None
+    ):
         self.customer_id = customer_id
-        self.product_id = product_id
+        self.customer_name = customer_name
+        self.place = place
+        self.state = state
+        self.pincode = pincode
+        self.district = district
+        self.city = city
         self.price = price
         self.status = status
+        self.product_id = product_id
         self.order_date = order_date
+        self.mail = mail or f"customer{customer_id}@example.com"  # Default email if not provided
+
 
 
 class Stats(db.Model):

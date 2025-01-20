@@ -334,7 +334,6 @@ def create_dummy_products():
     
     return jsonify({"message": f"{len(dummy_products)} dummy products attempted to be created.", "created_products": dummy_products})
 
-
 @admin.route('/create-dummy-orders')
 @login_required
 def create_dummy_orders():
@@ -346,8 +345,8 @@ def create_dummy_orders():
         return jsonify({"message": "No users or products available to create orders."})
 
     # Track orders created
-    global create_dummy_orders
-    
+    created_order_ids = []
+
     # Generate orders for every date in the last 3 months
     today = datetime.now(timezone.utc)
     start_date = today - timedelta(days=90)  # 3 months ago
@@ -360,12 +359,32 @@ def create_dummy_orders():
             customer = random.choice(users)
             product = random.choice(products)
             
-            # Randomly generate price and status
+            # Randomly generate data for additional columns
+            customer_name = f"Customer_{customer.id}"  # Example name based on user ID
+            place = random.choice(['Area1', 'Area2', 'Area3', 'Area4'])
+            state = random.choice(['State1', 'State2', 'State3'])
+            pincode = round(random.uniform(100000, 999999), 0)  # Random 6-digit pincode
+            district = random.randint(1, 99)  # Random district code
+            city = random.choice(['City1', 'City2', 'City3'])
             price = round(random.uniform(10, 500), 2)  # Random price between 10 and 500
             status = random.choice(['Pending', 'Shipped', 'Delivered', 'Cancelled'])  # Random status
+            mail = f"customer{customer.id}@example.com"  # Example mail based on user ID
             
             # Create the order
-            order = Order(customer_id=customer.id, product_id=product.id, price=price, status=status, order_date=order_date)
+            order = Order(
+                customer_id=customer.id,
+                customer_name=customer_name,
+                place=place,
+                state=state,
+                pincode=pincode,
+                district=district,
+                city=city,
+                price=price,
+                status=status,
+                product_id=product.id,
+                order_date=order_date,
+                mail=mail
+            )
             
             try:
                 db.session.add(order)
@@ -375,6 +394,45 @@ def create_dummy_orders():
                 db.session.rollback()
 
     return jsonify({"message": "Dummy orders created.", "created_orders": created_order_ids})
+
+# def create_dummy_orders():
+#     # Get all users and products to pick from randomly
+#     users = User.query.all()
+#     products = Product.query.all()
+
+#     if not users or not products:
+#         return jsonify({"message": "No users or products available to create orders."})
+
+#     # Track orders created
+#     global create_dummy_orders
+    
+#     # Generate orders for every date in the last 3 months
+#     today = datetime.now(timezone.utc)
+#     start_date = today - timedelta(days=90)  # 3 months ago
+
+#     for delta in range(91):  # Generate orders for each day in the last 3 months
+#         order_date = start_date + timedelta(days=delta)
+        
+#         for _ in range(random.randint(30, 40)):  # 30 to 40 orders per day
+#             # Randomly select a user and a product
+#             customer = random.choice(users)
+#             product = random.choice(products)
+            
+#             # Randomly generate price and status
+#             price = round(random.uniform(10, 500), 2)  # Random price between 10 and 500
+#             status = random.choice(['Pending', 'Shipped', 'Delivered', 'Cancelled'])  # Random status
+            
+#             # Create the order
+#             order = Order(customer_id=customer.id, product_id=product.id, price=price, status=status, order_date=order_date)
+            
+#             try:
+#                 db.session.add(order)
+#                 db.session.commit()
+#                 created_order_ids.append(order.id)  # Track created order IDs
+#             except IntegrityError:
+#                 db.session.rollback()
+
+#     return jsonify({"message": "Dummy orders created.", "created_orders": created_order_ids})
 
 
 @admin.route('/delete-dummy-users')

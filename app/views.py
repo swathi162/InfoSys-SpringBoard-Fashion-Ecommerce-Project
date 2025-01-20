@@ -913,69 +913,68 @@ def update_stats():
 
 
 @bp.route('/view_orders', methods=['GET'])
-def view_orders():
-    orders = Order.query.all()
-    orders_list = [order.__dict__ for order in orders]
-
-    # Remove the SQLAlchemy internal attribute '_sa_instance_state'
-    for order in orders_list:
-        order.pop('_sa_instance_state', None)
-
-    return jsonify(orders_list)
-
 # def view_orders():
-
 #     orders = Order.query.all()
-#     print(orders)
-#     # Render the template to display all orders
-#     return render_template('view_order.html', orders=orders)
+#     orders_list = [order.__dict__ for order in orders]
+
+#     # Remove the SQLAlchemy internal attribute '_sa_instance_state'
+#     for order in orders_list:
+#         order.pop('_sa_instance_state', None)
+
+#     return jsonify(orders_list)
+
+def view_orders():
+
+    orders = Order.query.all()
+    # Render the template to display all orders
+    return render_template('view_order.html', orders=orders)
 
 # @bp.route('/update_status/<int:order_id>', methods=['POST'])
 # def update_status(order_id):
 #     new_status = request.form['status']
 #     order = Order.query.get(order_id)
-#
+
 #     if order:
 #         # Update the order status
 #         order.status = new_status
 #         db.session.commit()
-#
+
 #         # If status is "Delivered Successfully", send an email to the user
 #         if new_status == "Delivered Successfully":
 #             send_rating_email(order)
-#
+
 #         # Update stats if needed
 #         update_stats()
-#
+
 #     return redirect(url_for('views.dashboard'))
-#
-#
+# #
+# #
 # def send_rating_email(order):
 #     user_email = order.user.email  # Get the user's email (assuming the order has a user reference)
 #     product = order.product  # Get the product related to the order
-#
+
 #     # Create the message
 #     subject = "Your Order has been Delivered! Please Rate Your Product"
 #     body = f"""
 #     Hi {order.user.first_name},
-#
+
 #     We hope you're enjoying your new product: {product.name}.
-#
+
 #     Could you please rate the product from 1 to 5 (1 being the worst, 5 being the best)?
 #     Your feedback helps us improve our products and services!
-#
+
 #     Click the link below to rate the product:
 #     {url_for('views.submit_rating', order_id=order.id, _external=True)}
-#
+
 #     Thank you for your support!
 #     """
-#
+
 #     # Send the email
 #     msg = Message(subject, recipients=[user_email], body=body)
 #     mail.send(msg)
-#
-#
-#####################################mail###################
+
+
+####################################mail###################
 
 
 
