@@ -2,13 +2,14 @@ from flask import Blueprint, render_template, get_flashed_messages, redirect, ur
 from flask_login import login_required, current_user
 from .models import db
 from .forms import UpdateUserForm
-from .decorators import is_delivery_person
+from .decorators import is_delivery_person, is_admin
 from .constants import STATES_CITY
 bp = Blueprint('views', __name__)
 from .models import Product, Order, Stats
 import os
 import logging
 from werkzeug.utils import secure_filename
+
 
 
 # Dummy Product Data (for rendering)
@@ -519,12 +520,13 @@ def deliver():
 
 @bp.route('/admin')
 @login_required
+@is_admin
 def index():
     return render_template('admin.html')
 
 @bp.route('/product/new', methods=['GET', 'POST'])
 @login_required
-
+@is_admin
 def new_product():
     if request.method == 'POST':
         try:
@@ -592,7 +594,7 @@ def new_product():
 ##########
 @bp.route('/product/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-
+@is_admin
 def update_product(id):
     # Fetch the product from the database by its ID
     product = Product.query.get_or_404(id)
@@ -823,7 +825,7 @@ def update_product(id):
 ############
 @bp.route('/products', methods=['GET'])
 @login_required
-
+@is_admin
 def product_list():
 
     products = Product.query.all()
@@ -834,7 +836,7 @@ def product_list():
 ###################################
 @bp.route('/product/delete/<int:id>', methods=['POST'])
 @login_required
-
+@is_admin
 def delete_product(id):
     # Fetch the product from the database by its ID
     product = Product.query.get_or_404(id)
@@ -863,6 +865,7 @@ def delete_product(id):
 
 
 @bp.route('/partner_dash')
+# @is_delivery_person
 def dashboard():
     # Fetch user info (hardcoded for now, you can change this later)
     user = {'name': current_user.firstname, 'pincode':current_user.pincode}
@@ -913,6 +916,8 @@ def update_stats():
 
 
 @bp.route('/view_orders', methods=['GET'])
+@login_required
+@is_admin
 # def view_orders():
 #     orders = Order.query.all()
 #     orders_list = [order.__dict__ for order in orders]
