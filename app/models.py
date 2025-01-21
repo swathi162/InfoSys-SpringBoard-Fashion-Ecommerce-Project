@@ -158,3 +158,17 @@ class Stats(db.Model):
     delivered = db.Column(db.Integer, default=0)
     in_transit = db.Column(db.Integer, default=0)
     failed = db.Column(db.Integer, default=0)
+
+class ProductAddLogs(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    date_added = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    quantity = db.Column(db.Integer, nullable=False) 
+    cost = db.Column(db.Float, nullable=False)
+    product = db.relationship('Product', backref=db.backref('product_add_logs', lazy=True))
+
+    def __init__(self, product_id, quantity, cost, date_added=None):
+        self.product_id = product_id
+        self.quantity = quantity
+        self.cost = cost
+        self.date_added = date_added if date_added else datetime.now(timezone.utc)
