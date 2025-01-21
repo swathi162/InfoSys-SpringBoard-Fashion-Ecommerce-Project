@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, get_flashed_messages, redirect, url_for, render_template
 from datetime import datetime, timezone, timedelta
 from flask_login import login_required, current_user
-from .models import db, User, Product, Order
+from .models import db, User, Product, Order, ProductAddLogs
 from .decorators import is_admin
 from .forms import AddItemForm
 from .methods import send_approval_email
@@ -171,7 +171,7 @@ def show_chart1():
 
     img = base64.b64encode(img.getvalue()).decode('utf8')
 
-    return render_template('show_graph.html', img = img, context = {"graph_name" : "New and Returning Customers"})
+    return render_template('show_graph.html', img = img, context = {"graph_name" : "New and Returning Customers", "data" : [[data[0][i], data[1][i], data[2][i]] for i in range(len(data[0]))],  "Attributes": ["Order Date", "New Customers", "Returning Customers"]})
 
 @admin.route('/chart2')
 @login_required
@@ -194,7 +194,7 @@ def show_chart2():
     
     img = visualize.generate_revenue_overtime_graph(data[0], data[1])
     img = base64.b64encode(img.getvalue()).decode('utf8')
-    return render_template('show_graph.html', img = img, context = {"graph_name" : "Revenue Over Time"})
+    return render_template('show_graph.html', img = img, context = {"graph_name" : "Revenue Over Time", "data" : [[data[0][i], round(data[1][i], 2)] for i in range(len(data[0]))], "Attributes": ["Date", "Total Sales"]})
 
 @admin.route('/chart3')
 @login_required
@@ -212,7 +212,7 @@ def show_chart3():
 
     img = visualize.generate_order_status_graph(status, count)
     img = base64.b64encode(img.getvalue()).decode('utf8')
-    return render_template('show_graph.html', img = img, context = {"graph_name" : "Order Status"})
+    return render_template('show_graph.html', img = img, context = {"graph_name" : "Order Status", "data" : [[status[i], count[i]] for i in range(len(status))], "Attributes": ["Status", "Count"]})
 
 @admin.route('/chart4')
 @login_required
@@ -231,7 +231,72 @@ def show_chart4():
     
     img = visualize.generate_inventory_stocks_graph(products, stocks)
     img = base64.b64encode(img.getvalue()).decode('utf8')
-    return render_template('show_graph.html', img = img, context = {"graph_name" : "Inventory Stock Levels"})
+    return render_template('inventory_stocks_insights.html', img = img, context = {"graph_name" : "Inventory Stock Levels", "data" : [[products[i], stocks[i]] for i in range(len(products))], "Attributes": ["Category", "Stock"]})
+
+@admin.route('/chart5')
+@login_required
+@is_admin
+def show_chart5():
+    results_expenses = db.session.query(
+        func.date(ProductAddLogs.date_added).label('date'),  # Group by date only (ignore time part)
+        func.sum(ProductAddLogs.cost).label('total_cost')
+    ).group_by(func.date(ProductAddLogs.date_added)).all()
+    sales_data = db.session.query(
+        func.date(Order.order_date).label('date'),
+        func.sum(Order.price).label('total_sales')
+    ).group_by(
+        func.date(Order.order_date)
+    ).order_by(
+        func.date(Order.order_date)
+    ).all()
+
+    dates = [str(result.date) for result in results_expenses]
+    expenses = [round(result.total_cost, 2) for result in results_expenses]
+    revenue = [round(result.total_sales, 2) for result in sales_data]
+
+    img = visualize.generate_finantial_overview_graph(dates, expenses, revenue)
+    img = base64.b64encode(img.getvalue()).decode('utf8')
+
+    return render_template("show_graph.html", img = img, context = {"graph_name" : "Finantial Overview", "data" : [[dates[i], expenses[i], revenue[i], round(revenue[i]-expenses[i],2)] for i in range(len(dates))], "Attributes": ["Date", "Expenses", "Revenue", "Profits"]} )
+
+@admin.route('/chart6')
+@login_required
+@is_admin
+def show_chart6():
+    result = db.session.query(User.role, func.count(User.role)).filter(User.role.in_(["user", "admin"])).group_by(User.role).all()
+    approved_delivery = db.session.query(func.count(User.role)).filter(User.approved == True, User.role == "delivery").first()
+    roles = [row[0] for row in result]
+    count = [row[1] for row in result]
+    roles.append("delivery")
+    count.append(approved_delivery[0])
+    img = visualize.user_role_distribution_graph(roles, count)
+    img = base64.b64encode(img.getvalue()).decode('utf8')
+    return render_template('show_graph.html', img = img, context = {"graph_name" : "User Roles Distributions", "data" : [[roles[i], count[i]] for i in range(len(roles))], "Attributes": ["Roles", "Count"]})
+
+@admin.route("/chart7")
+@login_required
+@is_admin
+def show_chart7():
+    state_order_counts = (db.session.query(User.state, func.count(Order.id).label("order_count")).join(Order, User.id == Order.customer_id).group_by(User.state).order_by(func.count(Order.id).desc()).all())
+    states = [row[0] for row in state_order_counts]
+    order_counts = [row[1] for row in state_order_counts]
+    img = visualize.generate_state_order_distribution_graph(states, order_counts)
+    img = base64.b64encode(img.getvalue()).decode('utf8')
+    return render_template('show_graph.html', img = img, context = {"graph_name" : "State Order Distribution", "data" : [[states[i], order_counts[i]] for i in range(len(states))], "Attributes": ["State", "Order Count"]})
+
+@admin.route('/get-stock-chart/<category>', methods = ["GET"])
+@login_required
+@is_admin
+def get_chart(category):
+    if request.method == "GET":
+        products = Product.query.filter(Product.category == category).all()
+        products_name = [product.name for product in products]
+        products_stocks = [product.stock_quantity for product in products]
+
+        img = visualize.generate_inventory_stocks_graph(products_name, products_stocks, category)
+        img = base64.b64encode(img.getvalue()).decode('utf8')
+
+        return jsonify({"image": img, "data": [products_name, products_stocks]})
 
 # dummy to be removed later
 @admin.route('/make_me_admin')
