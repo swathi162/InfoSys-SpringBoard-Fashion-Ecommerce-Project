@@ -272,6 +272,15 @@ def delete_user(user_id):
     finally:
         db.session.close()
 
+
+@admin.route('/view_orders', methods=['GET'])
+@login_required
+@is_admin
+def view_orders():
+    orders = Order.query.all()
+    return render_template('view_order.html', orders=orders)
+
+
 @admin.route("/approve-user/<int:user_id>", methods = ["POST"])
 @login_required
 @is_admin
