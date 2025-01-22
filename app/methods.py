@@ -103,3 +103,48 @@ def send_approval_email(to_email, user_name, approved):
         print("Email sent successfully!")
     except Exception as e:
         print(f"Failed to send email: {e}")
+
+def send_thankyou_email(to_email, user_name, rating_url = None):
+    global ema, p
+    from_email = ema
+    subject = "Thank You for Shopping!"
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 465  # SSL port
+    smtp_user = ema
+    smtp_password = p  # Use the app password generated
+
+    # Create the email
+    msg = MIMEMultipart('alternative')
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+
+    # Create the HTML content
+    html_content = f"""Dear {user_name},
+
+    Thank you for shopping with us! We hope you are happy with your purchase.
+    
+    We would love to hear your feedback! Please take a moment to rate the product you purchased:
+
+    {rating_url}
+
+    If you have any questions or need assistance, feel free to contact us.
+
+    Best regards,
+    Your Company Name
+    """
+
+    # Attach the HTML content to the email
+    msg.attach(MIMEText(html_content, 'html'))
+    
+    msg.add_header('X-Priority', '1')  # High priority
+    msg.add_header('X-Mailer', 'Python SMTP')
+
+    # Send the email
+    try:
+        with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+            server.login(smtp_user, smtp_password)
+            server.sendmail(from_email, to_email, msg.as_string())
+        print("Email sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")

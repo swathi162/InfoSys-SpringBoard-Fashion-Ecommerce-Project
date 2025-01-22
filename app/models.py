@@ -100,16 +100,16 @@ class Order(db.Model):
 
     # Foreign Keys
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
 
     # Order Details
     price = db.Column(db.Float, nullable=False)
+    delivery_date = db.Column(db.DateTime, nullable=True, default=None)
     status = db.Column(db.String(50), nullable=False)
     order_date = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
 
     # Additional Columns
     customer_name = db.Column(db.String(100), nullable=False)
-    place = db.Column(db.String(100), nullable=False)
+    address_line_1 = db.Column(db.String(100), nullable=False)
     state = db.Column(db.String(100), nullable=False)
     pincode = db.Column(db.Float, nullable=False)
     district = db.Column(db.Float, nullable=False)
@@ -118,36 +118,58 @@ class Order(db.Model):
 
     # Establishing the relationship
     user = db.relationship('User', backref=db.backref('orders', lazy=True))
-    product = db.relationship('Product', backref=db.backref('orders', lazy=True))
 
     def __init__(
         self,
         customer_id,
         customer_name,
-        place,
+        address_line_1,
         state,
         pincode,
         district,
         city,
         price,
         status,
-        product_id,
         order_date=datetime.now(timezone.utc),
         mail=None
     ):
         self.customer_id = customer_id
         self.customer_name = customer_name
-        self.place = place
         self.state = state
         self.pincode = pincode
         self.district = district
         self.city = city
         self.price = price
         self.status = status
-        self.product_id = product_id
         self.order_date = order_date
+        self.address_line_1 = address_line_1
         self.mail = mail or f"customer{customer_id}@example.com"  # Default email if not provided
 
+
+class OrderItems(db.Model):
+    # primary key
+    OrderItemID = db.Column(db.Integer, primary_key=True)
+    # foreign keys
+    OrderID = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    ProductID = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    UserID = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    #other attributes
+    Quantity = db.Column(db.Integer, nullable=False)
+    Price = db.Column(db.Float, nullable=False)
+    #estb. of relationship
+    user = db.relationship('User', backref=db.backref('ordersitem', lazy=True))
+    product = db.relationship('Product', backref=db.backref('ordersitem', lazy=True))
+    order = db.relationship('Order', backref=db.backref('ordersitem', lazy=True))
+
+    def __init__(self, OrderID, ProductID, UserID, Quantity, Price):
+        self.OrderID = OrderID
+        self.ProductID = ProductID
+        self.UserID = UserID
+        self.Quantity = Quantity
+        self.Price = Price
+
+    def __repr__(self):
+        return self.OrderID
 
 
 class Stats(db.Model):
