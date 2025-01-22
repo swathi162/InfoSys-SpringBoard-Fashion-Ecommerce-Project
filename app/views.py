@@ -313,13 +313,6 @@ def update_stats():
     db.session.commit()
 
 
-@bp.route('/view_orders', methods=['GET'])
-@login_required
-@is_admin
-def view_orders():
-    orders = Order.query.all()
-    return render_template('view_order.html', orders=orders)
-
 # @bp.route('/update_status/<int:order_id>', methods=['POST'])
 # def update_status(order_id):
 #     new_status = request.form['status']
