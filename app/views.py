@@ -3,323 +3,26 @@ from flask_login import login_required, current_user
 from .models import db
 from .forms import UpdateUserForm
 from .decorators import is_delivery_person, is_admin
-from .constants import STATES_CITY
+from .constants import STATES_CITY, PRODUCTS
 bp = Blueprint('views', __name__)
 from .models import Product, Order, Stats
 import os
 import logging
 from werkzeug.utils import secure_filename
+from .methods import send_thankyou_email
 
-
-
-# Dummy Product Data (for rendering)
-products = [
-    {
-        'id': 1,
-        'name': 'Classic White Shirt',
-        'price': 1999,
-        'image': 'static/Products/white.jpeg',
-        'description': 'A timeless classic for any wardrobe, perfect for both formal and casual occasions.',
-        'details': [
-            'Made from 100% premium cotton.',
-            'Breathable and comfortable for all-day wear.',
-            'Available in multiple sizes for the perfect fit.',
-            'Machine washable and easy to maintain.',
-            'Perfect for office, events, and everyday use.'
-        ],
-        'stock': 2,
-        'category': 'Clothing',
-        'brand':'Wrogn',
-        'colour': 'White',
-        'target_user':'Men',
-        'type': 'Shirt'
-    },
-    {
-        'id': 2,
-        'name': 'Denim Jacket',
-        'price': 3499,
-        'image': 'static/Products/dDenim Jacket.jpeg',
-        'description': 'A stylish denim jacket that adds an edgy touch to your outfit.',
-        'details': [
-            'Durable and soft denim fabric.',
-            'Slim-fit design with button closure.',
-            'Features side pockets and a classic collar.',
-            'Perfect for layering in any season.',
-            'Hand-wash recommended for extended durability.'
-        ],
-        'stock': 2,
-        'category': 'Clothing',
-        'brand':'Levis',
-        'colour': 'Blue',
-        'target_user':'Men',
-        'type': 'Jacket'
-    },
-    {
-        'id': 3,
-        'name': 'Summer Floral Dress',
-        'price': 2799,
-        'image': 'static/Products/dSummer Floral Dress.jpeg',
-        'description': 'A breezy floral dress ideal for summer outings and vacations.',
-        'details': [
-            'Lightweight, flowy material for comfort.',
-            'Beautiful floral prints with vibrant colors.',
-            'Adjustable straps for a customized fit.',
-            'Perfect for brunches, picnics, or beach outings.',
-            'Machine washable and fade-resistant.'
-        ],
-        'stock': 2,
-        'category': 'Clothing',
-        'brand':'Zara',
-        'colour': 'orange',
-        'target_user':['Women','girls'],
-        'type': 'Dress'
-    },
-    {
-        'id': 4,
-        'name': 'Leather Wallet',
-        'price': 1299,
-        'image': 'static/Products/Leather Wallet.jpeg',
-        'description': 'A sleek and functional leather wallet for everyday use.',
-        'details': [
-            'Crafted from genuine leather for durability.',
-            'Multiple compartments for cards and cash.',
-            'Compact design to fit in any pocket.',
-            'Available in black and brown colors.',
-            'A great gift for friends and family.'
-        ],
-        'stock': 2,
-        'category': 'Accessories',
-        'brand':'Puma',
-        'colour': 'Brown',
-        'target_user':'Men',
-        'type': 'Wallet'
-    },
-    {
-        'id': 5,
-        'name': 'Running Shoes',
-        'price': 3999,
-        'image': 'static/Products/shoes.jpeg',
-        'description': 'High-performance running shoes for athletes and fitness enthusiasts.',
-        'details': [
-            'Breathable mesh upper for ventilation.',
-            'Cushioned sole for maximum comfort.',
-            'Slip-resistant outsole for stability.',
-            'Lightweight design for enhanced speed.',
-            'Available in various sizes and colors.'
-        ],
-        'stock': 0,
-        'category': 'Footwear',
-        'brand':'Campus',
-        'colour': 'Blue',
-        'target_user':'Men',
-        'type': 'Shoes'
-    },
-    # Additional 10 dummy products
-    {
-        'id': 6,
-        'name': 'Silk Tie Set',
-        'price': 999,
-        'image': 'static/Products/tie.jpeg',
-        'description': 'A premium silk tie set for formal occasions.',
-        'details': [
-            'Includes matching pocket square.',
-            'Made from high-quality silk fabric.',
-            'Perfect for weddings, parties, and office wear.',
-            'Easy to clean and maintain.'
-        ],
-        'stock': 5,
-        'category': 'Accessories',
-        'brand':'levis',
-        'colour': 'White',
-        'target_user':'Men',
-        'type': 'Tie'
-    },
-    {
-        'id': 7,
-        'name': 'Smartwatch',
-        'price': 7999,
-        'image': 'static/Products/smartwatch.jpeg',
-        'description': 'A feature-packed smartwatch for health and connectivity.',
-        'details': [
-            'Tracks heart rate, steps, and sleep patterns.',
-            'Water-resistant and durable design.',
-            'Syncs with your smartphone for notifications.',
-            'Available in multiple strap colors.'
-        ],
-        'stock': 3,
-        'category': 'Electronics',
-        'brand':'Apple',
-        'colour': 'Black',
-        'target_user':'Unisex',
-        'type': 'Watch'
-    },
-    {
-        'id': 8,
-        'name': 'Backpack',
-        'price': 2499,
-        'image': 'static/Products/backpack.jpeg',
-        'description': 'A stylish and spacious backpack for work or travel.',
-        'details': [
-            'Made from water-resistant material.',
-            'Multiple compartments for organized storage.',
-            'Comfortable shoulder straps.',
-            'Available in multiple colors.'
-        ],
-        'stock': 4,
-        'category': 'Accessories',
-        'brand':'Safari',
-        'colour': 'Black',
-        'target_user':['Unisex'],
-        'type': 'Bag'
-    },
-    {
-        'id': 9,
-        'name': 'Wireless Earbuds',
-        'price': 3499,
-        'image': 'static/Products/earbuds.jpeg',
-        'description': 'Premium wireless earbuds with noise cancellation.',
-        'details': [
-            'Superior sound quality with deep bass.',
-            'Long battery life for all-day use.',
-            'Comes with a compact charging case.',
-            'Sweat and splash resistant.'
-        ],
-        'stock': 6,
-        'category': 'Electronics',
-        'brand':'Boat',
-        'colour': 'Black',
-        'target_user':['Unisex'],
-        'type': 'Earbuds'
-    },
-    {
-        'id': 10,
-        'name': 'Yoga Mat',
-        'price': 1299,
-        'image': 'static/Products/yogamat.jpeg',
-        'description': 'Non-slip yoga mat for fitness and relaxation.',
-        'details': [
-            'Made from eco-friendly materials.',
-            'Offers excellent grip and cushioning.',
-            'Lightweight and easy to carry.',
-            'Ideal for yoga, Pilates, and workouts.'
-        ],
-        'stock': 7,
-        'category': 'Fitness',
-        'brand':'Boldfit',
-        'colour': 'Pink',
-        'target_user':'Unisex',
-        'type': 'Mat'
-    },
-    {
-        'id': 11,
-        'name': 'Formal Black Blazer',
-        'price': 4999,
-        'image': 'static/Products/blazer.jpeg',
-        'description': 'A tailored blazer for formal events and office wear.',
-        'details': [
-            'Made from high-quality fabric.',
-            'Slim-fit design with classic lapels.',
-            'Available in multiple sizes.',
-            'Dry clean recommended.'
-        ],
-        'stock': 2,
-        'category': 'Clothing',
-        'brand':'levis',
-        'colour': 'Black',
-        'target_user':['Men'],
-        'type': 'Blazer'
-    },
-    {
-        'id': 12,
-        'name': 'Gaming Mouse',
-        'price': 1999,
-        'image': 'static/Products/gaming_mouse.jpeg',
-        'description': 'Ergonomic gaming mouse with customizable buttons.',
-        'details': [
-            'Adjustable DPI for precision.',
-            'RGB lighting for a cool aesthetic.',
-            'Compatible with all major operating systems.',
-            'Plug-and-play setup.'
-        ],
-        'stock': 8,
-        'category': 'Electronics',
-        'brand':'Asus',
-        'colour': 'Black',
-        'target_user':['Unisex'],
-        'type': 'Mouse'
-    },
-    {
-        'id': 13,
-        'name': 'Cotton Bedsheet',
-        'price': 1499,
-        'image': 'static/Products/bedsheet.jpeg',
-        'description': 'A soft and comfortable bedsheet for a good night’s sleep.',
-        'details': [
-            'Made from 100% cotton.',
-            'Available in vibrant patterns.',
-            'Machine washable and durable.',
-            'Perfect for all bed sizes.'
-        ],
-        'stock': 10,
-        'category': 'Home',
-        'brand':'levis',
-        'colour': 'Red',
-        'target_user':'Unisex',
-        'type': 'Bedsheet'
-    },
-    {
-        'id': 14,
-        'name': 'Bluetooth Speaker',
-        'price': 2599,
-        'image': 'static/Products/speaker.jpeg',
-        'description': 'Compact Bluetooth speaker with superior sound quality.',
-        'details': [
-            'Long battery life and quick charging.',
-            'Supports hands-free calls.',
-            'Water-resistant and durable.',
-            'Compatible with all Bluetooth devices.'
-        ],
-        'stock': 5,
-        'category': 'Electronics',
-        'brand': 'OnePlus',
-        'colour': 'Boat',
-        'colour': 'Black',
-        'target_user':'Unisex',
-        'type': 'Speaker'
-    },
-    {
-        'id': 15,
-        'name': 'Wrist Watch',
-        'price': 3499,
-        'image': 'static/Products/wristwatch.jpeg',
-        'description': 'A classic wristwatch with an elegant design.',
-        'details': [
-            'Quartz movement for precise timekeeping.',
-            'Stainless steel strap.',
-            'Water-resistant up to 50 meters.',
-            'Available in gold and silver tones.'
-        ],
-        'stock': 3,
-        'category': 'Accessories',
-        'brand': 'Boat',
-        'colour': 'Boat',
-        'colour': 'Brown',
-        'target_user':['Unisex'],
-        'type': 'Watch'
-    }
-]
 
 @bp.route("/")
 @bp.route('/home')
 @login_required
 def home():
     print("going to render homepage...")
-    return render_template('home.html', products=products)
+    return render_template('home.html', products=PRODUCTS)
 
 
 @bp.route('/product/<int:product_id>')
 def product_details(product_id):
-    product = next((p for p in products if p['id'] == product_id), None)
+    product = next((p for p in PRODUCTS if p['id'] == product_id), None)
     if product is None:
         return "Product not found", 404
     return render_template('product.html', product=product)
@@ -379,7 +82,7 @@ def add_to_cart(product_id):
     cart = {int(k): v for k, v in session['cart'].items()}
 
     # Get the product from the products list
-    product = next((p for p in products if p['id'] == product_id), None)
+    product = next((p for p in PRODUCTS if p['id'] == product_id), None)
 
     if product:
         # If product is already in the cart, increment the quantity, but not exceeding stock
@@ -411,7 +114,7 @@ def cart():
     for product_id, quantity in cart.items():
         product_id = int(product_id)
 
-        product = next((p for p in products if p["id"] == product_id), None)
+        product = next((p for p in PRODUCTS if p["id"] == product_id), None)
         if product:
             product_copy = product.copy()
             product_copy["quantity"] = quantity
@@ -433,7 +136,7 @@ def update_quantity(product_id):
     except (ValueError, TypeError):
         return jsonify({'success': False, 'message': 'Invalid quantity'}), 400
 
-    product = next((p for p in products if p['id'] == product_id), None)
+    product = next((p for p in PRODUCTS if p['id'] == product_id), None)
 
     if not product:
         return jsonify({'success': False, 'message': 'Product not found'}), 404
@@ -449,7 +152,7 @@ def update_quantity(product_id):
     session['cart'] = cart
 
     # Calculate new total price and total items
-    total_price = sum(product["price"] * quantity for product_id, quantity in cart.items() if (product := next((p for p in products if p["id"] == int(product_id)), None)))
+    total_price = sum(product["price"] * quantity for product_id, quantity in cart.items() if (product := next((p for p in PRODUCTS if p["id"] == int(product_id)), None)))
     total_items = sum(cart.values())  # Total items is the sum of all quantities
 
     return jsonify({'success': True, 'new_quantity': new_quantity, 'total_price': total_price, 'total_items': total_items})
@@ -474,7 +177,7 @@ def search():
         results = []
         
         # Loop through each product and check if it matches the individual words or combined query
-        for p in products:
+        for p in PRODUCTS:
             try:
                 # Combine product attributes into one string for easier matching
                 product_str = (
@@ -508,7 +211,7 @@ def search():
 @bp.route('/category/<category>')
 def category(category):
     category = category.lower()
-    results = [p for p in products if p['category'].lower() == category]
+    results = [p for p in PRODUCTS if p['category'].lower() == category]
     return render_template('category_results.html', category=category.capitalize(), results=results)
 
 @bp.route('/deliver')
@@ -516,313 +219,6 @@ def category(category):
 def deliver():
     return Response("Delivered", status=200)
 
-## Team 3
-
-@bp.route('/admin')
-@login_required
-@is_admin
-def index():
-    return render_template('admin.html')
-
-@bp.route('/product/new', methods=['GET', 'POST'])
-@login_required
-@is_admin
-def new_product():
-    if request.method == 'POST':
-        try:
-            # Extract form fields
-            name = request.form['name']
-            description = request.form['description']
-            details = request.form['details']
-            price = float(request.form['price'])
-            stock_quantity = int(request.form['stock_quantity'])
-            brand = request.form['brand']
-            size = request.form['size']
-            target_user = request.form['target_user']
-            type_ = request.form['type']
-            rating = request.form.get('rating', 'not rated')
-            category = request.form['category']
-
-            # Validate required fields
-            if not all([name, description, brand, category, size, target_user, type_]):
-                return "Missing required fields", 400
-
-            # Handle image upload (if exists)
-            image = request.files.get('image')
-            image_filename = None
-            if image:
-                # Ensure the 'static/uploads' directory exists
-                uploads_dir = os.path.join('static', 'uploads')
-                if not os.path.exists(uploads_dir):
-                    os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
-
-                # Sanitize the image filename and save it
-                image_filename = secure_filename(image.filename)
-                image_path = os.path.join(uploads_dir, image_filename)
-                image.save(image_path)
-
-            # Create the product object
-            new_product = Product(
-                name=name,
-                description=description,
-                details=details,
-                price=price,
-                stock_quantity=stock_quantity,
-                brand=brand,
-                size=size,
-                target_user=target_user,
-                type=type_,
-                rating=rating,
-                category=category,
-                colour="nocolour",
-                image=image_filename
-            )
-
-            # Commit to the database
-            db.session.add(new_product)
-            db.session.commit()
-
-            flash("Product added successfully!", "success")
-            return redirect(url_for('views.product_list'))
-
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error while adding product: {e}")  # Log the error to the console
-            return f"Error while adding product: {e}", 500  # Return the error message
-
-    return render_template('add-shop-items.html')
-##########
-@bp.route('/product/edit/<int:id>', methods=['GET', 'POST'])
-@login_required
-@is_admin
-def update_product(id):
-    # Fetch the product from the database by its ID
-    product = Product.query.get_or_404(id)
-
-    if request.method == 'POST':
-        try:
-            # Extract form fields
-            name = request.form['name']
-            description = request.form['description']
-            details = request.form['details']
-            price = float(request.form['price'])
-            stock_quantity = int(request.form['stock_quantity'])
-            brand = request.form['brand']
-            size = request.form['size']
-            target_user = request.form['target_user']
-            type_ = request.form['type']
-            category = request.form['category']
-
-            # Validate required fields
-            if not all([name, description, brand, category, size, target_user, type_]):
-                return "Missing required fields", 400
-
-            # Handle image upload (if exists)
-            image_filename = product.image  # Retain the old image filename if no new image is uploaded
-            image = request.files.get('image')
-            if image:
-                # Ensure the 'static/uploads' directory exists
-                uploads_dir = os.path.join('static', 'uploads')
-                if not os.path.exists(uploads_dir):
-                    os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
-
-                # Sanitize the image filename and save it
-                image_filename = secure_filename(image.filename)
-                image_path = os.path.join(uploads_dir, image_filename)
-                image.save(image_path)
-
-            # Update the product object with new data
-            product.name = name
-            product.description = description
-            product.details = details
-            product.price = price
-            product.stock_quantity = stock_quantity
-            product.brand = brand
-            product.size = size
-            product.target_user = target_user
-            product.type = type_
-            product.category = category
-            product.image = image_filename  # Update the image (if new image uploaded)
-
-            # Commit to the database
-            db.session.commit()
-
-            flash("Product updated successfully!", "success")
-            return redirect(url_for('views.product_list'))  # Redirect to the product list page
-
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error occurred while updating product: {e}")
-            return f"Error while updating product: {e}", 500  # Internal error
-
-    # If it's a GET request, render the form with the current product data
-    return render_template('update-product.html', product=product)
-# @bp.route('/product/edit/<int:id>', methods=['GET', 'POST'])
-# @login_required
-# def update_product(id):
-#     # Fetch the product from the database by its ID
-#     try:
-#         print(f"Fetching product with ID: {id}")
-#         product = Product.query.get_or_404(id)
-#     except Exception as e:
-#         print(f"Error fetching product: {e}")
-#         return f"Error fetching product: {e}", 500
-
-#     if request.method == 'POST':
-#         try:
-#             print("Request method is POST")
-#             print("Form data received:", request.form)
-
-#             # Extract form fields
-#             name = request.form['name']
-#             description = request.form['description']
-#             details = request.form['details']
-#             price = float(request.form['price'])  # Check if this field exists and is valid
-#             stock_quantity = int(request.form['stock_quantity'])  # Same here
-#             brand = request.form['brand']
-#             size = request.form['size']
-#             target_user = request.form['target_user']
-#             type_ = request.form['type']
-#             rating = float(request.form['rating'])
-#             category = request.form['category']
-
-#             print(f"Extracted fields: name={name}, description={description}, price={price}, ...")
-
-#             # Validate required fields
-#             if not all([name, description, brand, category, size, target_user, type_]):
-#                 print("Missing required fields")
-#                 return "Missing required fields", 400
-
-#             # Handle image upload (if exists)
-#             image_filename = product.image  # Retain the old image filename if no new image is uploaded
-#             try:
-#                 image = request.files.get('image')
-#                 if image:
-#                     print(f"Image file received: {image.filename}")
-#                     uploads_dir = os.path.join('static', 'uploads')
-#                     if not os.path.exists(uploads_dir):
-#                         os.makedirs(uploads_dir)
-#                         print(f"Created directory: {uploads_dir}")
-
-#                     # Save the image
-#                     image_filename = secure_filename(image.filename)
-#                     image_path = os.path.join(uploads_dir, image_filename)
-#                     image.save(image_path)
-#                     print(f"Saved image at: {image_path}")
-#             except Exception as e:
-#                 print(f"Error handling image upload: {e}")
-#                 return f"Error handling image upload: {e}", 500
-
-#             # Update the product object
-#             product.name = name
-#             product.description = description
-#             product.details = details
-#             product.price = price
-#             product.stock_quantity = stock_quantity
-#             product.brand = brand
-#             product.size = size
-#             product.target_user = target_user
-#             product.type = type_
-#             product.rating = rating
-#             product.category = category
-#             product.image = image_filename
-
-#             # Commit to the database
-#             try:
-#                 db.session.commit()
-#                 print("Product updated successfully!")
-#                 flash("Product updated successfully!", "success")
-#                 return redirect(url_for('views.product_list'))
-#             except Exception as e:
-#                 print(f"Error committing to database: {e}")
-#                 db.session.rollback()
-#                 return f"Database error: {e}", 500
-
-#         except KeyError as e:
-#             print(f"Missing field in form: {e}")
-#             return f"Missing field in form: {e}", 400
-#         except ValueError as e:
-#             print(f"Invalid value provided: {e}")
-#             return f"Invalid value provided: {e}", 400
-#         except Exception as e:
-#             print(f"General error: {e}")
-#             return f"Error: {e}", 500
-
-#     # If it's a GET request, render the form with the current product data
-#     print(f"Rendering update form for product ID: {id}")
-#     return render_template('update-product.html', product=product)
-
-# @bp.route('/product/edit/<int:id>', methods=['GET', 'POST'])
-# @login_required
-# def update_product(id):
-#     # Fetch the product from the database by its ID
-#     print(request.form)
-#     product = Product.query.get_or_404(id)
-
-#     if request.method == 'POST':
-#         try:
-#             # Extract form fields
-#             name = request.form['name']
-#             description = request.form['description']
-#             details = request.form['details']
-#             price = float(request.form['price'])
-#             stock_quantity = int(request.form['stock_quantity'])
-#             brand = request.form['brand']
-#             size = request.form['size']
-#             target_user = request.form['target_user']
-#             type_ = request.form['type']
-#             rating = float(request.form['rating'])
-#             category = request.form['category']
-
-#             print("")
-
-#             # Validate required fields
-#             if not all([name, description, brand, category, size, target_user, type_]):
-#                 print("Missing required Fields...")
-#                 return "Missing required fields", 400
-
-#             # Handle image upload (if exists)
-#             image_filename = product.image  # Retain the old image filename if no new image is uploaded
-#             image = request.files.get('image')
-#             if image:
-#                 # Ensure the 'static/uploads' directory exists
-#                 uploads_dir = os.path.join('static', 'uploads')
-#                 if not os.path.exists(uploads_dir):
-#                     os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
-
-#                 # Sanitize the image filename and save it
-#                 image_filename = secure_filename(image.filename)
-#                 image_path = os.path.join(uploads_dir, image_filename)
-#                 image.save(image_path)
-#             print("It's fine upto here...")
-#             # Update the product object with new data
-#             product.name = name
-#             product.description = description
-#             product.details = details
-#             product.price = price
-#             product.stock_quantity = stock_quantity
-#             product.brand = brand
-#             product.size = size
-#             product.target_user = target_user
-#             product.type = type_
-#             product.rating = rating
-#             product.category = category
-#             product.image = image_filename  # Update the image (if new image uploaded)
-
-#             # Commit to the database
-#             db.session.commit()
-
-#             flash("Product updated successfully!", "success")
-#             return redirect(url_for('views.product_list'))  # Redirect to the product list page
-
-#         except Exception as e:
-#             db.session.rollback()
-#             print(f"Error occurred while updating product: {e}")
-#             return f"Error while updating product: {e}", 500  # Internal error
-
-#     # If it's a GET request, render the form with the current product data
-#     return render_template('update-product.html', product=product)
-############
 @bp.route('/products', methods=['GET'])
 @login_required
 @is_admin
@@ -895,7 +291,9 @@ def update_status(order_id):
 
         # If the status is "Delivered Successfully", send a thank-you email
         if new_status == 'Delivered Successfully':
-            send_thank_you_email(order)
+            rating_url = url_for('views.rate_product', order_id=order.id, _external=True)
+            print(rating_url)
+            send_thankyou_email(order.user.email, order.user.first_name, rating_url=None)
 
         db.session.commit()
 
@@ -918,20 +316,8 @@ def update_stats():
 @bp.route('/view_orders', methods=['GET'])
 @login_required
 @is_admin
-# def view_orders():
-#     orders = Order.query.all()
-#     orders_list = [order.__dict__ for order in orders]
-
-#     # Remove the SQLAlchemy internal attribute '_sa_instance_state'
-#     for order in orders_list:
-#         order.pop('_sa_instance_state', None)
-
-#     return jsonify(orders_list)
-
 def view_orders():
-
     orders = Order.query.all()
-    # Render the template to display all orders
     return render_template('view_order.html', orders=orders)
 
 # @bp.route('/update_status/<int:order_id>', methods=['POST'])
@@ -1022,70 +408,3 @@ def rate_product(order_id):
             return redirect(url_for('views.view_product', id=product.id))
 
     return render_template('rate_product.html', product=product,order=order)
-
-def send_thank_you_email(order):
-    """
-    Function to send a thank you email when an order is delivered.
-
-    """
-    rate_product_url = url_for('views.rate_product', order_id=order.id, _external=True)
-
-    msg = Message(
-        subject="Thank You for Shopping!",
-        recipients=[order.mail]  # Send email to the customer's email
-    )
-
-    # Set the body of the email
-    msg.body = f"""
-    Dear {order.customer_name},
-
-    Thank you for shopping with us! We hope you are happy with your purchase.
-    
-    We would love to hear your feedback! Please take a moment to rate the product you purchased:
-
-    {rate_product_url}
-
-
-
-    If you have any questions or need assistance, feel free to contact us.
-
-    Best regards,
-    Your Company Name
-    """
-
-    try:
-        with current_app.app_context():
-            current_app.extensions['mail'].send(msg)
-        print("Thank you email sent successfully!")
-    except Exception as e:
-        print(f"Error sending email: {e}")
-
-
-
-#
-# @bp.route('/update_status/<int:order_id>', methods=['POST'])
-# def update_status(order_id):
-#     new_status = request.form['status']  # Get the selected status from the form
-#     order = Order.query.get(order_id)  # Fetch the order by ID from the database
-#
-#     if order:
-#         # Update the order's status
-#         order.status = new_status
-#         db.session.commit()
-#
-#         # Update stats (optional, but if required to refresh stats)
-#         update_stats()
-#
-#     return redirect(url_for('views.dashboard'))  # Redirect back to the dashboard or the orders list
-#
-#
-# def update_stats():
-#     # Recalculate stats for the dashboard or stats view
-#     stats = Stats.query.first()
-#     stats.total_orders = Order.query.count()
-#     stats.delivered = Order.query.filter_by(status='Delivered Successfully').count()
-#     stats.in_transit = Order.query.filter_by(status='In Transit').count()
-#     stats.failed = Order.query.filter_by(status='Failed').count()
-#     db.session.commit()
-
-

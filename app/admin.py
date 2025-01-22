@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, get_flashed_messages, redirect, url_for, render_template
+from flask import Blueprint, request, jsonify, get_flashed_messages, redirect, url_for, render_template, flash
 from datetime import datetime, timezone, timedelta
 from flask_login import login_required, current_user
 from .models import db, User, Product, Order, ProductAddLogs
@@ -9,6 +9,8 @@ from werkzeug.security import generate_password_hash
 from .visualization import Visualize
 import base64
 from sqlalchemy import func
+import os
+from werkzeug.utils import secure_filename
 
 import random
 import string
@@ -19,6 +21,149 @@ admin = Blueprint('admin', __name__)
 
 #Define the Visualization Object
 visualize = Visualize()
+
+## Team 3
+
+@admin.route('/')
+@login_required
+@is_admin
+def index():
+    return render_template('admin.html')
+
+
+@admin.route('/product/new', methods=['GET', 'POST'])
+@login_required
+@is_admin
+def new_product():
+    if request.method == 'POST':
+        try:
+            # Extract form fields
+            name = request.form['name']
+            description = request.form['description']
+            details = request.form['details']
+            price = float(request.form['price'])
+            stock_quantity = int(request.form['stock_quantity'])
+            brand = request.form['brand']
+            size = request.form['size']
+            target_user = request.form['target_user']
+            type_ = request.form['type']
+            rating = request.form.get('rating', 'not rated')
+            category = request.form['category']
+
+            # Validate required fields
+            if not all([name, description, brand, category, size, target_user, type_]):
+                return "Missing required fields", 400
+
+            # Handle image upload (if exists)
+            image = request.files.get('image')
+            image_filename = None
+            if image:
+                # Ensure the 'static/uploads' directory exists
+                uploads_dir = os.path.join('static', 'uploads')
+                if not os.path.exists(uploads_dir):
+                    os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
+
+                # Sanitize the image filename and save it
+                image_filename = secure_filename(image.filename)
+                image_path = os.path.join(uploads_dir, image_filename)
+                image.save(image_path)
+
+            # Create the product object
+            new_product = Product(
+                name=name,
+                description=description,
+                details=details,
+                price=price,
+                stock_quantity=stock_quantity,
+                brand=brand,
+                size=size,
+                target_user=target_user,
+                type=type_,
+                rating=rating,
+                category=category,
+                colour="nocolour",
+                image=image_filename
+            )
+
+            # Commit to the database
+            db.session.add(new_product)
+            db.session.commit()
+
+            flash("Product added successfully!", "success")
+            return redirect(url_for('views.product_list'))
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error while adding product: {e}")  # Log the error to the console
+            return f"Error while adding product: {e}", 500  # Return the error message
+
+    return render_template('add-shop-items.html')
+##########
+@admin.route('/product/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+@is_admin
+def update_product(id):
+    # Fetch the product from the database by its ID
+    product = Product.query.get_or_404(id)
+
+    if request.method == 'POST':
+        try:
+            # Extract form fields
+            name = request.form['name']
+            description = request.form['description']
+            details = request.form['details']
+            price = float(request.form['price'])
+            stock_quantity = int(request.form['stock_quantity'])
+            brand = request.form['brand']
+            size = request.form['size']
+            target_user = request.form['target_user']
+            type_ = request.form['type']
+            category = request.form['category']
+
+            # Validate required fields
+            if not all([name, description, brand, category, size, target_user, type_]):
+                return "Missing required fields", 400
+
+            # Handle image upload (if exists)
+            image_filename = product.image  # Retain the old image filename if no new image is uploaded
+            image = request.files.get('image')
+            if image:
+                # Ensure the 'static/uploads' directory exists
+                uploads_dir = os.path.join('static', 'uploads')
+                if not os.path.exists(uploads_dir):
+                    os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
+
+                # Sanitize the image filename and save it
+                image_filename = secure_filename(image.filename)
+                image_path = os.path.join(uploads_dir, image_filename)
+                image.save(image_path)
+
+            # Update the product object with new data
+            product.name = name
+            product.description = description
+            product.details = details
+            product.price = price
+            product.stock_quantity = stock_quantity
+            product.brand = brand
+            product.size = size
+            product.target_user = target_user
+            product.type = type_
+            product.category = category
+            product.image = image_filename  # Update the image (if new image uploaded)
+
+            # Commit to the database
+            db.session.commit()
+
+            flash("Product updated successfully!", "success")
+            return redirect(url_for('views.product_list'))  # Redirect to the product list page
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error occurred while updating product: {e}")
+            return f"Error while updating product: {e}", 500  # Internal error
+
+    # If it's a GET request, render the form with the current product data
+    return render_template('update-product.html', product=product)
 
 # Define the route to add shop items
 @admin.route('/add-shop-items', methods=['POST'])
@@ -77,6 +222,29 @@ def remove_shop_items(product_id):
     finally:
         db.session.close()  # Ensure the session is closed
 
+
+@admin.route('/product/delete/<int:id>', methods=['POST'])
+@login_required
+@is_admin
+def delete_product(id):
+    # Fetch the product from the database by its ID
+    product = Product.query.get_or_404(id)
+
+    try:
+        # Delete the product
+        db.session.delete(product)
+        db.session.commit()
+
+        print(f"Product {id} deleted successfully")
+        return redirect(url_for('views.product_list'))  # Redirect back to the product list page
+
+    except Exception as e:
+        print(f"Error occurred while deleting product: {e}")
+        db.session.rollback()
+        return "Error while deleting product", 500  # Internal server error
+
+
+
 @admin.route('/approve-delivery-dashboard')
 @login_required
 @is_admin
@@ -103,6 +271,15 @@ def delete_user(user_id):
         return jsonify({'message': f'An error occurred: {str(e)}'}), 500
     finally:
         db.session.close()
+
+
+@admin.route('/view_orders', methods=['GET'])
+@login_required
+@is_admin
+def view_orders():
+    orders = Order.query.all()
+    return render_template('view_order.html', orders=orders)
+
 
 @admin.route("/approve-user/<int:user_id>", methods = ["POST"])
 @login_required
