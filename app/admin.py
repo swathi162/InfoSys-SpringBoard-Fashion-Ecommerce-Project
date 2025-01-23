@@ -28,8 +28,16 @@ visualize = Visualize()
 @login_required
 @is_admin
 def index():
+    print("Going to render admin page")
     return render_template('admin.html')
 
+
+@admin.route('/products', methods=['GET'])
+@login_required
+@is_admin
+def product_list():
+    products = Product.query.all()
+    return render_template('product-list.html', products=products)
 
 @admin.route('/product/new', methods=['GET', 'POST'])
 @login_required

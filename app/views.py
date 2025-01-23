@@ -219,15 +219,7 @@ def category(category):
 def deliver():
     return Response("Delivered", status=200)
 
-@bp.route('/products', methods=['GET'])
-@login_required
-@is_admin
-def product_list():
 
-    products = Product.query.all()
-
-    # Render the template to display all products
-    return render_template('product-list.html', products=products)
 
 ###################################
 @bp.route('/product/delete/<int:id>', methods=['POST'])
