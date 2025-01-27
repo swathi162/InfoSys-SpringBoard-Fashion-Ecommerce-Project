@@ -223,6 +223,16 @@ def remove_shop_items(product_id):
         db.session.close()  # Ensure the session is closed
 
 
+@admin.route('/products', methods=['GET'])
+@login_required
+@is_admin
+def product_list():
+
+    products = Product.query.all()
+
+    # Render the template to display all products
+    return render_template('product-list.html', products=products)
+
 @admin.route('/product/delete/<int:id>', methods=['POST'])
 @login_required
 @is_admin
@@ -236,7 +246,7 @@ def delete_product(id):
         db.session.commit()
 
         print(f"Product {id} deleted successfully")
-        return redirect(url_for('views.product_list'))  # Redirect back to the product list page
+        return redirect(url_for('admin.product_list'))  # Redirect back to the product list page
 
     except Exception as e:
         print(f"Error occurred while deleting product: {e}")

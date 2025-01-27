@@ -75,7 +75,7 @@
                             <li><button><i class="bi bi-bag-heart"></i> My Wishlist</button></li>
                             <li><button><i class="bi bi-house-door"></i> My Address</button></li>
                             <li><button><i class="bi bi-box-seam"></i> My Orders</button></li>
-                            <li><button><i class="bi bi-gear"></i> Settings</button></li>
+                            <li><a href = "{{ url_for('views.profile') }}"><button><i class="bi bi-gear"></i> Settings</button></a></li>
                             <li><a href="{{ url_for('auth.logout') }}"><button><i class="bi bi-box-arrow-left"></i> Logout</button></a></li>
                         </ul>
                     </div>
