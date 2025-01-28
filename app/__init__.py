@@ -9,7 +9,7 @@ from itsdangerous import URLSafeTimedSerializer
 import random
 import string
 from sqlalchemy.exc import IntegrityError
-from .models import db, User, Product, Order, ProductAddLogs
+from .models import db, User, Product, Order, ProductAddLogs, OrderItems
 from datetime import datetime, timezone, timedelta
 from werkzeug.security import generate_password_hash
 
@@ -146,52 +146,83 @@ def create_app(config_class="Config"):
                 db.session.rollback()
                 
         # Create dummy orders
-        users = User.query.all()
-        products = Product.query.all()
+            # Filter users with role 'user'
+        users = User.query.filter_by(role='user').all()
 
-        if users and products:
-            today = datetime.now(timezone.utc)
-            start_date = today - timedelta(days=90)  # 3 months ago
+        # Filter products with stock > 0
+        products = Product.query.filter(Product.stock_quantity > 0).all()
 
-            for delta in range(91):  # Generate orders for each day in the last 3 months
-                order_date = start_date + timedelta(days=delta)
+        if not users or not products:
+            print("Please ensure there are users with role 'user' and products with stock > 0 in the database.")
+            return
 
-                for _ in range(random.randint(30, 40)):  # 30 to 40 orders per day
-                    customer = random.choice(users)
-                    product = random.choice(products)
+        # Set the start date for 3 months ago
+        start_date = datetime.now(timezone.utc) - timedelta(days=90)
+        current_date = datetime.now(timezone.utc)
 
-                    customer_name = f"Customer_{customer.id}"
-                    place = random.choice(['Area1', 'Area2', 'Area3', 'Area4'])
-                    state = random.choice(['State1', 'State2', 'State3'])
-                    pincode = round(random.uniform(100000, 999999), 0)
-                    district = random.randint(1, 99)
-                    city = random.choice(['City1', 'City2', 'City3'])
-                    price = round(random.uniform(10, 500), 2)
-                    status = random.choice(['Pending', 'Shipped', 'Delivered', 'Cancelled'])
-                    mail = f"customer{customer.id}@example.com"
+        # Generate orders for each day in the past 3 months
+        while start_date <= current_date:
+            orders_per_day = random.randint(30, 40)
+            for _ in range(orders_per_day):
+                # Select a random user and product
+                user = random.choice(users)
+                product = random.choice(products)
 
-                    order = Order(
-                        customer_id=customer.id,
-                        customer_name=customer_name,
-                        place=place,
-                        state=state,
-                        pincode=pincode,
-                        district=district,
-                        city=city,
-                        price=price,
-                        status=status,
-                        product_id=product.id,
-                        order_date=order_date,
-                        mail=mail
-                    )
+                # Ensure the product has sufficient stock
+                if product.stock_quantity <= 0:
+                    continue
 
-                    try:
-                        db.session.add(order)
-                        db.session.commit()
-                        created_order_ids.append(order.id)
-                    except IntegrityError:
-                        db.session.rollback()
-        
+                # Generate order details
+                customer_name = f"{user.firstname} {user.lastname}"
+                address_line_1 = user.address_line_1
+                state = user.state
+                city = user.city
+                pincode = user.pincode
+                price = product.price
+                status = random.choice(["Pending", "Shipped", "Delivered", "Cancelled"])
+                order_date = start_date + timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
+                mail = user.email
+
+                # Create an Order instance
+                order = Order(
+                    customer_id=user.id,
+                    customer_name=customer_name,
+                    address_line_1=address_line_1,
+                    state=state,
+                    pincode=pincode,
+                    district=random.randint(1, 50),  # Assuming district is a random value
+                    city=city,
+                    price=price,
+                    status=status,
+                    order_date=order_date,
+                    mail=mail,
+                )
+                db.session.add(order)
+                db.session.flush()  # Get the order ID immediately after adding
+
+                # Generate order item details
+                max_quantity = min(10, product.stock_quantity)
+                quantity = random.randint(1, max_quantity)  # Ensure quantity does not exceed stock
+                order_item = OrderItems(
+                    OrderID=order.id,
+                    ProductID=product.id,
+                    UserID=user.id,
+                    Quantity=quantity,
+                    Price=round(product.price * quantity, 2),
+                )
+                db.session.add(order_item)
+
+                # Reduce the product stock
+                product.stock_quantity -= quantity
+                db.session.add(product)
+
+            # Move to the next day
+            start_date += timedelta(days=1)
+
+        db.session.commit()
+        print("Orders for the past 3 months have been added, and product stock has been updated.")
+
+            
         # Route to create dummy entries for ProductAddLogs for products within the past 90 days
         # Track dummy log entries created
         created_logs = []

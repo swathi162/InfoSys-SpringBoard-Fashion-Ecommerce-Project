@@ -70,9 +70,9 @@
       <!-- Sidebar Buttons -->
       <div class="col-md-3 admin-sidebar d-flex flex-column align-items-center">
         <h5 class="text-center mb-4">Admin Menu</h5>
-        <button class="btn btn-primary w-100 mb-3" onclick="redirectTo('{{ url_for('views.new_product') }}')">Add Product</button>
-        <button class="btn btn-primary w-100 mb-3" onclick="redirectTo('{{ url_for('views.product_list') }}')">View Products</button>
-        <button class="btn btn-primary w-100 mb-3" onclick="redirectTo('{{ url_for('views.view_orders') }}')">View Orders</button>
+        <button class="btn btn-primary w-100 mb-3" onclick="redirectTo('{{ url_for('admin.new_product') }}')">Add Product</button>
+        <button class="btn btn-primary w-100 mb-3" onclick="redirectTo('{{ url_for('admin.product_list') }}')">View Products</button>
+        <button class="btn btn-primary w-100 mb-3" onclick="redirectTo('{{ url_for('admin.view_orders') }}')">View Orders</button>
       </div>
 
       <!-- Admin Content and Image -->
