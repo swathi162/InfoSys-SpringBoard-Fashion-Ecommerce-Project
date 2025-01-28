@@ -221,32 +221,6 @@ def deliver():
 
 
 
-###################################
-@bp.route('/product/delete/<int:id>', methods=['POST'])
-@login_required
-@is_admin
-def delete_product(id):
-    # Fetch the product from the database by its ID
-    product = Product.query.get_or_404(id)
-
-    try:
-        # Delete the product
-        db.session.delete(product)
-        db.session.commit()
-
-        print(f"Product {id} deleted successfully")
-        return redirect(url_for('views.product_list'))  # Redirect back to the product list page
-
-    except Exception as e:
-        print(f"Error occurred while deleting product: {e}")
-        db.session.rollback()
-        return "Error while deleting product", 500  # Internal server error
-
-
-
-
-
-
 #<a href="{{ url_for('views.view_product', id=product.id) }}" class="btn btn-info btn-sm">View</a>
 
 
@@ -393,3 +367,7 @@ def rate_product(order_id):
             return redirect(url_for('views.view_product', id=product.id))
 
     return render_template('rate_product.html', product=product,order=order)
+
+@bp.route('/profile', methods=['GET', 'POST'])
+def profile():
+    return render_template('profile.html')
