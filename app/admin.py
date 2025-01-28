@@ -32,13 +32,6 @@ def index():
     return render_template('admin.html')
 
 
-@admin.route('/products', methods=['GET'])
-@login_required
-@is_admin
-def product_list():
-    products = Product.query.all()
-    return render_template('product-list.html', products=products)
-
 @admin.route('/product/new', methods=['GET', 'POST'])
 @login_required
 @is_admin
@@ -98,7 +91,7 @@ def new_product():
             db.session.commit()
 
             flash("Product added successfully!", "success")
-            return redirect(url_for('views.product_list'))
+            return redirect(url_for('admin.product_list'))
 
         except Exception as e:
             db.session.rollback()
@@ -163,7 +156,7 @@ def update_product(id):
             db.session.commit()
 
             flash("Product updated successfully!", "success")
-            return redirect(url_for('views.product_list'))  # Redirect to the product list page
+            return redirect(url_for('admin.product_list'))  # Redirect to the product list page
 
         except Exception as e:
             db.session.rollback()
