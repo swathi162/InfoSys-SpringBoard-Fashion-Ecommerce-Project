@@ -50,7 +50,7 @@ def update():
 
             db.session.commit()
             flash('Details updated successfully!', 'success')
-            return redirect(url_for('auth.update_user'))
+            return redirect(url_for('views.profile'))
         except Exception as e:
             db.session.rollback()
             flash(f'An error occurred: {str(e)}', 'danger')
