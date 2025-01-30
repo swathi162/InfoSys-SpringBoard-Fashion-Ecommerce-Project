@@ -71,27 +71,6 @@ class Product(db.Model):
         return self.name
         
 
-# class Order(db.Model):
-#     _tablename_ = 'orders'
-
-#     id = db.Column(db.Integer, primary_key=True)
-#     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-#     price = db.Column(db.Float, nullable=False)
-#     status = db.Column(db.String(50), nullable=False)
-#     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable = False)
-#     order_date = db.Column(db.DateTime, nullable = False, default = datetime.now(timezone.utc))
-
-#     #establising the relationsip
-#     user = db.relationship('User', backref = db.backref('orders', lazy = True))
-#     product = db.relationship('Product', backref = db.backref('orders', lazy = True))
-
-#     def __init__(self, customer_id, price, status, product_id, order_date = datetime.now(timezone.utc)):
-#         self.customer_id = customer_id
-#         self.product_id = product_id
-#         self.price = price
-#         self.status = status
-#         self.order_date = order_date
-
 class Order(db.Model):
     __tablename__ = 'orders'
 
@@ -112,7 +91,6 @@ class Order(db.Model):
     address_line_1 = db.Column(db.String(100), nullable=False)
     state = db.Column(db.String(100), nullable=False)
     pincode = db.Column(db.Float, nullable=False)
-    district = db.Column(db.Float, nullable=False)
     city = db.Column(db.String(100), nullable=False)
     mail = db.Column(db.String(50), nullable=False)
 
@@ -126,7 +104,6 @@ class Order(db.Model):
         address_line_1,
         state,
         pincode,
-        district,
         city,
         price,
         status,
@@ -137,7 +114,6 @@ class Order(db.Model):
         self.customer_name = customer_name
         self.state = state
         self.pincode = pincode
-        self.district = district
         self.city = city
         self.price = price
         self.status = status
@@ -169,7 +145,7 @@ class OrderItems(db.Model):
         self.Price = Price
 
     def __repr__(self):
-        return self.OrderID
+        return f"{self.OrderID}"
 
 
 class Stats(db.Model):

@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify, get_flashed_messages, redirect, url_for, render_template, flash
 from datetime import datetime, timezone, timedelta
 from flask_login import login_required, current_user
-from .models import db, User, Product, Order, ProductAddLogs
+from .models import db, User, Product, Order, ProductAddLogs, OrderItems
 from .decorators import is_admin
 from .forms import AddItemForm
-from .methods import send_approval_email
+from .methods import send_approval_email, send_order_deleted_mail
 from werkzeug.security import generate_password_hash
 from .visualization import Visualize
 import base64
@@ -86,8 +86,11 @@ def new_product():
                 image=image_filename
             )
 
-            # Commit to the database
             db.session.add(new_product)
+            db.session.commit()
+            productaddlogs = ProductAddLogs(new_product.id, stock_quantity, price*stock_quantity)
+            db.session.add(productaddlogs)
+            # Commit to the database
             db.session.commit()
 
             flash("Product added successfully!", "success")
@@ -138,6 +141,10 @@ def update_product(id):
                 image_filename = secure_filename(image.filename)
                 image_path = os.path.join(uploads_dir, image_filename)
                 image.save(image_path)
+            
+            if stock_quantity<product.stock_quantity:
+                productaddlogs = ProductAddLogs(product.id, product.stock_quantity-stock_quantity, price*product.stock_quantity-stock_quantity)
+                db.session.add(productaddlogs)
 
             # Update the product object with new data
             product.name = name
@@ -156,7 +163,7 @@ def update_product(id):
             db.session.commit()
 
             flash("Product updated successfully!", "success")
-            return redirect(url_for('admin.product_list'))  # Redirect to the product list page
+            return redirect(url_for('views.product_list'))  # Redirect to the product list page
 
         except Exception as e:
             db.session.rollback()
@@ -165,63 +172,6 @@ def update_product(id):
 
     # If it's a GET request, render the form with the current product data
     return render_template('update-product.html', product=product)
-
-# Define the route to add shop items
-@admin.route('/add-shop-items', methods=['POST'])
-def add_shop_items():
-    form = AddItemForm(meta={'csrf': False})  # Disable CSRF for API requests
-
-    if not form.validate_on_submit():
-        return jsonify({'message': 'Validation failed', 'errors': form.errors}), 400
-
-    try:
-        # Create a new product from form data
-        new_product = Product(
-            name=form.name.data,
-            description=form.description.data,
-            price=form.price.data,
-            stock_quantity=form.stock_quantity.data,
-            brand=form.brand.data,
-            category=form.category.data,
-            updated_at=form.updated_at.data if form.updated_at.data else datetime.utcnow(),
-            rating=form.rating.data,
-            ratting=form.ratting.data
-        )
-
-        # Add the product to the database
-        db.session.add(new_product)
-        db.session.commit()
-
-        return jsonify({'message': 'Product added successfully'}), 201
-    except Exception as e:
-        db.session.rollback()  # Rollback transaction in case of error
-        return jsonify({'message': f'An error occurred: {str(e)}'}), 500
-    finally:
-        db.session.close()  # Ensure the session is closed
-
-
-# Define the route to remove shop items
-@admin.route('/remove-shop-items/<int:product_id>', methods=['DELETE'])
-@login_required
-def remove_shop_items(product_id):
-    try:
-        # Query the product by ID
-        product = Product.query.get(product_id)
-
-        # Check if the product exists
-        if not product:
-            return jsonify({'message': 'Product not found'}), 404
-
-        # Remove the product from the database
-        db.session.delete(product)
-        db.session.commit()
-
-        return jsonify({'message': 'Product removed successfully'}), 200
-    except Exception as e:
-        db.session.rollback()  # Rollback transaction in case of error
-        return jsonify({'message': f'An error occurred: {str(e)}'}), 500
-    finally:
-        db.session.close()  # Ensure the session is closed
 
 
 @admin.route('/products', methods=['GET'])
@@ -249,12 +199,44 @@ def delete_product(id):
         print(f"Product {id} deleted successfully")
         return redirect(url_for('admin.product_list'))  # Redirect back to the product list page
 
+    except IntegrityError as e:
+
+        db.session.rollback()
+        users = User.query.join(OrderItems, User.id == OrderItems.UserID)\
+                  .filter(OrderItems.ProductID == product.id)\
+                  .all()
+
+        OrderItems.query.filter_by(ProductID=id).delete()
+
+        # Find orders that no longer have order items
+        empty_orders = Order.query.outerjoin(OrderItems, Order.id == OrderItems.OrderID)\
+                                 .filter(OrderItems.OrderID.is_(None))\
+                                 .all()
+        
+        # Delete those empty orders
+        for order in empty_orders:
+            db.session.delete(order)
+        # Delete all related product add logs
+        ProductAddLogs.query.filter_by(product_id=id).delete()
+
+        # Finally, delete the product
+        db.session.delete(product)
+        db.session.commit()
+
+        # Finally, delete the product
+        db.session.delete(product)
+        db.session.commit()
+        
+
+        for _ in users:
+            send_order_deleted_mail(_.email, _.firstname+" "+_.lastname ,product.name)
+
     except Exception as e:
         print(f"Error occurred while deleting product: {e}")
         db.session.rollback()
         return "Error while deleting product", 500  # Internal server error
 
-
+    return redirect(url_for('admin.product_list'))
 
 @admin.route('/approve-delivery-dashboard')
 @login_required
