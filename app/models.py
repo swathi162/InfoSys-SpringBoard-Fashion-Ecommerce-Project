@@ -34,6 +34,9 @@ class User(UserMixin,db.Model):
     def isDeliveryPerson(self):
         return self.role.lower() == 'delivery' and self.approved == True
 
+    #RelationShips 
+    cart_items = db.relationship('CartItem', back_populates='user')
+
 # Product Model (new)
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -50,6 +53,9 @@ class Product(db.Model):
     colour = db.Column(db.String(50), nullable=False)
     category = db.Column(db.String(100),nullable=False)
     rating = db.Column(db.String(100))
+
+    # Relationsships
+    cart_items = db.relationship('CartItem', back_populates='product')
 
 
     def __init__(self, name, price, stock_quantity, brand, size, target_user, type, image, description, details, colour, category, rating):
