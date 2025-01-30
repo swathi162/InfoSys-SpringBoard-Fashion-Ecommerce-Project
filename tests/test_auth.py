@@ -30,7 +30,7 @@ class TestSignupPage(TestCase):
         self.assertIn(b'name="email"', response.data)
         self.assertIn(b'name="password"', response.data)
         self.assertIn(b'name="confirm_password"', response.data)
-        self.assertIn(b'name="address"', response.data)
+        self.assertIn(b'name="address_line_1"', response.data)
         self.assertIn(b'name="state"', response.data)
         self.assertIn(b'name="city"', response.data)
         self.assertIn(b'name="role"', response.data)
@@ -44,7 +44,7 @@ class TestSignupPage(TestCase):
             'email': 'test@example.com',
             'password': 'password123',
             'confirm_password': 'password123',
-            'address': '123 Test St',
+            'address_line_1': '123 Test St',
             'state': 'Uttarakhand',
             'city': 'Dehradun',
             'pincode': '123456',
@@ -61,7 +61,7 @@ class TestSignupPage(TestCase):
             'email': 'test@example.com',
             'password': 'password123',
             'confirm_password': 'wrongpassword',  # Mismatched password
-            'address': '123 Test St',
+            'address_line_1': '123 Test St',
             'state': 'Uttarakhand',
             'city': 'Dehradun',
             'pincode': '123456',
