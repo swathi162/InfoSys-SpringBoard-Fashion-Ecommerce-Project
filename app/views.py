@@ -104,7 +104,7 @@ def view_wishlist():
     wishlist_items = Wishlist.query.filter_by(user_id=current_user.id).all()
     products_in_wishlist = []
     for item in wishlist_items:
-        product = next((p for p in products if p['id'] == item.product_id), None)
+        product = next((p for p in PRODUCTS if p['id'] == item.product_id), None)
         if product:
             products_in_wishlist.append(product)
 
@@ -214,25 +214,25 @@ def update_quantity(product_id):
     db.session.commit()
 
     # Calculate total price and total items
-    total_price = sum(item.quantity * next((p for p in products if p['id'] == item.product_id), {}).get('price', 0)
+    total_price = sum(item.quantity * next((p for p in PRODUCTS if p['id'] == item.product_id), {}).get('price', 0)
                       for item in CartItem.query.filter_by(user_id=current_user.id).all())
     total_items = sum(item.quantity for item in CartItem.query.filter_by(user_id=current_user.id).all())
 
     return jsonify({'success': True, 'new_quantity': cart_item.quantity, 'total_price': total_price, 'total_items': total_items})
 
 
-@bp.route('/remove-from-wishlist/<int:product_id>', methods=['POST'])
-@login_required
-def remove_from_wishlist(product_id):
-    wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
-    if wishlist_item:
-        db.session.delete(wishlist_item)
-        db.session.commit()
-        flash("Item removed from wishlist!", "success")
-    else:
-        flash("Item not found in wishlist.", "error")
+@bp.route('/remove-from-cart/<int:product_id>', methods=['POST'])
+def remove_from_cart(product_id):
+    if not current_user.is_authenticated:
+        flash("Please log in to modify your cart.", "warning")
+        return redirect(url_for('auth.login'))
 
-    return redirect(url_for('views.view_wishlist'))
+    cart_item = CartItem.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+    if cart_item:
+        db.session.delete(cart_item)
+        db.session.commit()
+        flash("Item removed from cart!", "success")
+    return redirect(url_for('views.cart'))
 
 
 
