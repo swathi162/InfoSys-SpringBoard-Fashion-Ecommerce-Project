@@ -69,19 +69,48 @@ def auth_error():
     return render_template('notAuthorized.html')
 
 
+@bp.route('/add_to_wishlist/<int:product_id>', methods=['POST'])
+@login_required
+def add_to_wishlist(product_id):
+    # Find the product 
+    product = next((p for p in PRODUCTS if p['id'] == product_id), None)
+
+    if not product:
+        # If product not found, flash an error message and redirect
+        flash('Product not found', 'danger')
+        return redirect(url_for('views.product_details', product_id=product_id))
+
+    # Check if product already exists in wishlist
+    existing_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+
+    if existing_item:
+        # If product already in wishlist, flash a message and redirect
+        flash('Product already in wishlist', 'info')
+        return redirect(url_for('views.product_details', product_id=product_id))
+
+    # Add the product to the wishlist
+    wishlist_item = Wishlist(user_id=current_user.id, product_id=product_id)
+    db.session.add(wishlist_item)
+    db.session.commit()
+
+    # Flash success message and redirect
+    flash('Product added to wishlist!', 'success')
+    return redirect(url_for('views.product_details', product_id=product_id))
+
+
 @bp.route('/wishlist')
 @login_required
 def view_wishlist():
     wishlist_items = Wishlist.query.filter_by(user_id=current_user.id).all()
     products_in_wishlist = []
     for item in wishlist_items:
-        product = next((p for p in PRODUCTS if p['id'] == item.product_id), None)
+        product = next((p for p in products if p['id'] == item.product_id), None)
         if product:
             products_in_wishlist.append(product)
 
     return render_template('wishlist.html', products=products_in_wishlist)
 
-@bp.route('/wishlist')
+@bp.route('/remove-from-wishlist/<int:product_id>', methods=['POST'])
 @login_required
 def remove_from_wishlist(product_id):
     wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
@@ -93,6 +122,7 @@ def remove_from_wishlist(product_id):
         flash("Item not found in wishlist.", "error")
 
     return redirect(url_for('views.view_wishlist'))
+
 
 @bp.route('/add_to_cart/<int:product_id>', methods=['POST'])
 def add_to_cart(product_id):
@@ -191,18 +221,18 @@ def update_quantity(product_id):
     return jsonify({'success': True, 'new_quantity': cart_item.quantity, 'total_price': total_price, 'total_items': total_items})
 
 
-@bp.route('/remove-from-cart/<int:product_id>', methods=['POST'])
-def remove_from_cart(product_id):
-    if not current_user.is_authenticated:
-        flash("Please log in to modify your cart.", "warning")
-        return redirect(url_for('auth.login'))
-
-    cart_item = CartItem.query.filter_by(user_id=current_user.id, product_id=product_id).first()
-    if cart_item:
-        db.session.delete(cart_item)
+@bp.route('/remove-from-wishlist/<int:product_id>', methods=['POST'])
+@login_required
+def remove_from_wishlist(product_id):
+    wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+    if wishlist_item:
+        db.session.delete(wishlist_item)
         db.session.commit()
-        flash("Item removed from cart!", "success")
-    return redirect(url_for('views.cart'))
+        flash("Item removed from wishlist!", "success")
+    else:
+        flash("Item not found in wishlist.", "error")
+
+    return redirect(url_for('views.view_wishlist'))
 
 
 
@@ -476,7 +506,7 @@ def place_order():
 
         # Create a new order
         new_order = Order(
-            user_id=user.id,
+            customer_id=user.id,
             product_id=cart_item.product_id,  # Add the correct product_id here
             address_line_1=user.address_line_1,
             state=user.state,
@@ -520,21 +550,23 @@ def my_orders():
     # Fetch all orders for the current user
     orders = (
         db.session.query(Order)
-        .filter(Order.user_id == current_user.id)
+        .filter(Order.customer_id == current_user.id)
         .all()
     )
 
     # Organizing data to group items under respective orders
     orders_data = []
     for order in orders:
-        # Find the product associated with this order from the dummy product data
-        product = next((p for p in PRODUCTS if p['id'] == order.product_id), None)
         
         # Fetch related OrderItem details
-        order_items = db.session.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+        order_items = db.session.query(OrderItem).filter(OrderItem.OrderID == order.id).all()
+
+        # Find the product associated with this order from the dummy product data
+        product = next((p for p in PRODUCTS if p['id'] == OrderItem.ProductID), None)
         
-        total_quantity = sum(item.quantity for item in order_items)
-        total_price = order.total_cost  # Ensure total_cost is stored in the Order model
+        total_quantity = sum(item.Quantity for item in order_items)
+        # total_price = order.total_cost  # Ensure total_cost is stored in the Order model
+        total_price = 1006
 
         if product:
             orders_data.append({
