@@ -58,7 +58,7 @@ class Product(db.Model):
     cart_items = db.relationship('CartItem', back_populates='product')
 
 
-    def __init__(self, name, price, stock_quantity, brand, size, target_user, type, image, description, details, colour, category, rating):
+    def __init__(self, name, price, stock_quantity, brand, size, target_user, type, image, description, details, colour, category, rating=None):
         self.name = name
         self.price = price
         self.stock_quantity = stock_quantity
