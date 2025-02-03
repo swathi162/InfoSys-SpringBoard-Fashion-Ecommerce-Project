@@ -105,6 +105,15 @@
       border-radius: 8px;
       margin-bottom: 20px;
     }
+
+    /* Cancelled Orders Section */
+
+    .cancelled-orders{
+      background-color: #f3c5c5;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
     
   </style>
 {% endblock heads %}
@@ -135,14 +144,14 @@
               <tr>
                 <td>{{ order.id }}</td>
                 <td>{{ order.customer_name }}</td>
-                <td>{{ order.mail }}</td>
                 <td>{{ order.address_line_1+", "+order.city+", "+order.state }}</td>
+                <td>{{ order.mail }}</td>
                 <td>{{ order.status }}</td>
                 
                 <td>
                   <!-- Button to assign the order to the delivery partner -->
                   <form action="{{ url_for('views.update_status', order_id=order.id) }}" method="POST">
-                    <input type="hidden" name="status" value="In Transit">
+                    <input type="hidden" name="status" value="Pending">
                     <button type="submit" class="btn btn-primary btn-sm">Assign to Me</button>
                   </form>
                 </td>
@@ -175,15 +184,15 @@
               <tr>
                 <td>{{ order.id }}</td>
                 <td>{{ order.customer_name }}</td>
-                <td>{{ order.mail }}</td>
                 <td>{{ order.address_line_1+", "+order.city+", "+order.state }}</td>
+                <td>{{ order.mail }}</td>
                 <td>{{ order.status }}</td>
                 <td>
                   {% if order.status != 'Delivered' %}
                   <!-- Form to update the order status if it's not delivered successfully -->
                   <form action="{{ url_for('views.update_status', order_id=order.id) }}" method="POST">
                     <select name="status" class="form-control">
-                      <option value="In Transit" {% if order.status == "In Transit" %}selected{% endif %}>In Transit</option>
+                      <option value="In Transit" {% if order.status == "Pending" %}selected{% endif %}>In Transit</option>
                       <option value="Delivered" {% if order.status == "Delivered" %}selected{% endif %}>Delivered Successfully</option>
                       <option value="Cancelled" {% if order.status == "Cancelled" %}selected{% endif %}>Failed</option>
                     </select>
@@ -222,8 +231,8 @@
             <tr>
               <td>{{ order.id }}</td>
               <td>{{ order.customer_name }}</td>
-              <td>{{ order.mail }}</td>
               <td>{{ order.address_line_1+", "+order.city+", "+order.state }}</td>
+              <td>{{ order.mail }}</td>
               <td>{{ order.status }}</td>
             </tr>
             {% endfor %}
@@ -233,7 +242,38 @@
           <p class="no-data">No delivered orders yet.</p>
         {% endif %}
       </div>
+      
+      <!-- cancelled order section -->
+      <div class="col-md-6 cancelled-orders section">
+      <h4>Cancelled Orders</h4>
+      {% if cancelled_orders %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer Name</th>
+            <th>Address</th>
+            <th>Email</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in cancelled_orders %}
+          <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.customer_name }}</td>
+            <td>{{ order.address_line_1+", "+order.city+", "+order.state }}</td>
+            <td>{{ order.mail }}</td>
+            <td>{{ order.status }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="no-data">No Cancelled orders yet.</p>
+      {% endif %}
     </div>
-    
+  </div>
+  </div>
   </div>
 {% endblock content %}

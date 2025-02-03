@@ -90,7 +90,7 @@ class Order(db.Model):
     # Order Details
     price = db.Column(db.Float, nullable=False)
     delivery_date = db.Column(db.DateTime, nullable=True, default=None)
-    status = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(50), nullable=False, default = "Pending")
     order_date = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
 
     # Additional Columns

@@ -52,6 +52,7 @@
                     <a href="{{ url_for('views.view_order_items', order_id=order.id) }}" class="card mb-3 text-decoration-none text-dark">
                         <div class="card-body">
                             <h5 class="card-title">Order #{{ order.id }}</h5>
+                            <p class="card-text"><strong>Delivered On: </strong>{{ order.delivery_date }}</p>
                             <p class="card-text"><strong>Items:</strong></p>
                             <ul>
                                 {% for item in order.order_items %}

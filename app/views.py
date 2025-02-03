@@ -20,8 +20,10 @@ OrderItem = OrderItems
 def home():
     if current_user.isDeliveryPerson():
         return redirect(url_for('views.dashboard'))
+    
     if current_user.isAdmin():
         return redirect(url_for('admin.index'))
+    
     global PRODUCTS
     PRODUCTS = Product.query.all()
     return render_template('home.html', products=PRODUCTS)
@@ -295,8 +297,11 @@ def dashboard():
     # Fetch new orders that haven't been assigned (deliver_person is None) and match the pincode
     new_orders = Order.query.filter(Order.delivery_person_id.is_(None), Order.pincode == pincode).all()
 
-    # Fetch orders assigned to this delivery person, excluding delivered orders
-    assigned_orders = Order.query.filter(Order.delivery_person_id == current_user.id, Order.status != 'Delivered').all()
+    # Fetch orders assigned to this delivery person, 
+    assigned_orders = Order.query.filter(Order.delivery_person_id == current_user.id, Order.status == 'Pending').all()
+
+    # Fetch orders cancelled by this delivery person
+    cancelled_orders = Order.query.filter(Order.delivery_person_id == current_user.id, Order.status == 'Cancelled').all()
 
     # Fetch delivered orders (status 'Delivered Successfully') for this delivery person
     delivered_orders = Order.query.filter(Order.delivery_person_id == current_user.id, Order.status == 'Delivered').all()
@@ -304,7 +309,8 @@ def dashboard():
     return render_template('partner_home.html',
                            new_orders=new_orders,
                            assigned_orders=assigned_orders,
-                           delivered_orders=delivered_orders)
+                           delivered_orders=delivered_orders,
+                           cancelled_orders=cancelled_orders)
 
 
 @bp.route('/update_status/<int:order_id>', methods=['POST'])
@@ -322,13 +328,10 @@ def update_status(order_id):
 
         # Handle the case when the order is successfully delivered
         if order.status == 'Delivered':
+            order.delivery_date = datetime.now(timezone.utc)
             send_thankyou_email(current_user.email, current_user.firstname+" "+current_user.lastname, url_for('views.rate_product', order_id = order_id))  # Send a thank you email
             # Move the order to the delivered orders section
             # Optionally, remove it from the assigned orders (this is handled by the dashboard query)
-
-        # If the order has failed, unassign the delivery person
-        if order.status == 'Cancelled':
-            order.delivery_person_id = None
 
         # Commit the changes to the database
         db.session.commit()
@@ -410,7 +413,7 @@ def checkout():
             })
             subtotal += product.price * cart_item.quantity
 
-    shipping = subtotal
+    shipping = 40
     tax = subtotal * 5/100  # 5% tax
     total = subtotal + shipping + tax
 
