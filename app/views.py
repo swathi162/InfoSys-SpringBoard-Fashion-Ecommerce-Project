@@ -20,6 +20,8 @@ OrderItem = OrderItems
 def home():
     if current_user.isDeliveryPerson():
         return redirect(url_for('views.dashboard'))
+    if current_user.isAdmin():
+        return redirect(url_for('admin.index'))
     global PRODUCTS
     PRODUCTS = Product.query.all()
     return render_template('home.html', products=PRODUCTS)
