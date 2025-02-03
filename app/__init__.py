@@ -179,7 +179,7 @@ def create_app(config_class="Config"):
                 city = user.city
                 pincode = user.pincode
                 price = product.price
-                status = random.choice(["Pending", "Shipped", "Delivered", "Cancelled"])
+                status = random.choice(["Pending", "Delivered", "Cancelled"])
                 order_date = start_date + timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
                 mail = user.email
 

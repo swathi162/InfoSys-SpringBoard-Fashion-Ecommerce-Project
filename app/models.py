@@ -156,14 +156,6 @@ class OrderItems(db.Model):
         return f"{self.OrderID}"
 
 
-class Stats(db.Model):
-    __tablename__ = 'stats'
-
-    id = db.Column(db.Integer, primary_key=True)
-    total_orders = db.Column(db.Integer, default=0)
-    delivered = db.Column(db.Integer, default=0)
-    in_transit = db.Column(db.Integer, default=0)
-    failed = db.Column(db.Integer, default=0)
 
 class ProductAddLogs(db.Model):
     id = db.Column(db.Integer, primary_key=True)

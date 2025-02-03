@@ -5,7 +5,7 @@ from .forms import UpdateUserForm
 from .decorators import is_delivery_person, is_admin
 from .constants import STATES_CITY, PRODUCTS
 bp = Blueprint('views', __name__)
-from .models import Product, Order, Stats
+from .models import Product, Order
 import os
 from datetime import datetime,timezone
 import logging
@@ -325,7 +325,7 @@ def update_status(order_id):
             # Optionally, remove it from the assigned orders (this is handled by the dashboard query)
 
         # If the order has failed, unassign the delivery person
-        if order.status == 'Failed':
+        if order.status == 'Cancelled':
             order.delivery_person_id = None
 
         # Commit the changes to the database
