@@ -11,7 +11,7 @@ import base64
 from sqlalchemy import func
 import os
 from werkzeug.utils import secure_filename
-
+import uuid
 import random
 import string
 from sqlalchemy.exc import IntegrityError
@@ -49,6 +49,7 @@ def new_product():
             target_user = request.form['target_user']
             type_ = request.form['type']
             rating = request.form.get('rating', 'not rated')
+            color = request.form.get('color', 'nocolor')
             category = request.form['category']
 
             # Validate required fields
@@ -60,12 +61,12 @@ def new_product():
             image_filename = None
             if image:
                 # Ensure the 'static/uploads' directory exists
-                uploads_dir = os.path.join('static', 'uploads')
+                uploads_dir = os.path.join('app/static', 'product_uploads')
                 if not os.path.exists(uploads_dir):
                     os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
 
-                # Sanitize the image filename and save it
-                image_filename = secure_filename(image.filename)
+                #generate unique filename
+                image_filename = f"{uuid.uuid4().hex}_{secure_filename(image.filename)}"
                 image_path = os.path.join(uploads_dir, image_filename)
                 image.save(image_path)
 
@@ -82,7 +83,7 @@ def new_product():
                 type=type_,
                 rating=rating,
                 category=category,
-                colour="nocolour",
+                colour=color,
                 image=image_filename
             )
 
@@ -133,7 +134,7 @@ def update_product(id):
             image = request.files.get('image')
             if image:
                 # Ensure the 'static/uploads' directory exists
-                uploads_dir = os.path.join('static', 'uploads')
+                uploads_dir = os.path.join('app/static', 'uploads')
                 if not os.path.exists(uploads_dir):
                     os.makedirs(uploads_dir)  # Create the directory if it doesn't exist
 

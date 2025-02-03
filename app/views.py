@@ -1,28 +1,31 @@
 from flask import Blueprint, render_template, get_flashed_messages, redirect, url_for, Response, flash, request, session, jsonify
 from flask_login import login_required, current_user
-from .models import db
+from .models import db, Wishlist,Order,CartItem,OrderItems
 from .forms import UpdateUserForm
 from .decorators import is_delivery_person, is_admin
 from .constants import STATES_CITY, PRODUCTS
 bp = Blueprint('views', __name__)
 from .models import Product, Order, Stats
 import os
+from datetime import datetime,timezone
 import logging
 from werkzeug.utils import secure_filename
 from .methods import send_thankyou_email
 
+OrderItem = OrderItems
 
 @bp.route("/")
 @bp.route('/home')
 @login_required
 def home():
-    print("going to render homepage...")
+    global PRODUCTS
+    PRODUCTS = Product.query.all()
     return render_template('home.html', products=PRODUCTS)
 
 
 @bp.route('/product/<int:product_id>')
 def product_details(product_id):
-    product = next((p for p in PRODUCTS if p['id'] == product_id), None)
+    product = Product.query.get(product_id)
     if product is None:
         return "Product not found", 404
     return render_template('product.html', product=product)
@@ -66,103 +69,158 @@ def update():
 def auth_error():
     return render_template('notAuthorized.html')
 
-@bp.route('/add_to_cart/<product_id>', methods=['POST'])
+
+@bp.route('/add_to_wishlist/<int:product_id>', methods=['POST'])
+@login_required
+def add_to_wishlist(product_id):
+    # Find the product 
+    product = Product.query.get(product_id)
+
+    if not product:
+        # If product not found, flash an error message and redirect
+        flash('Product not found', 'danger')
+        return redirect(url_for('views.product_details', product_id=product_id))
+
+    # Check if product already exists in wishlist
+    existing_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+
+    if existing_item:
+        # If product already in wishlist, flash a message and redirect
+        flash('Product already in wishlist', 'info')
+        return redirect(url_for('views.product_details', product_id=product_id))
+
+    # Add the product to the wishlist
+    wishlist_item = Wishlist(user_id=current_user.id, product_id=product_id)
+    db.session.add(wishlist_item)
+    db.session.commit()
+
+    # Flash success message and redirect
+    flash('Product added to wishlist!', 'success')
+    return redirect(url_for('views.product_details', product_id=product_id))
+
+
+@bp.route('/wishlist')
+@login_required
+def view_wishlist():
+    wishlist_items = Wishlist.query.filter_by(user_id=current_user.id).all()
+    products_in_wishlist = []
+    for item in wishlist_items:
+        product = Product.query.get(item.product_id)
+        if product:
+            products_in_wishlist.append(product)
+
+    return render_template('wishlist.html', products=products_in_wishlist)
+
+@bp.route('/remove-from-wishlist/<int:product_id>', methods=['POST'])
+@login_required
+def remove_from_wishlist(product_id):
+    wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+    if wishlist_item:
+        db.session.delete(wishlist_item)
+        db.session.commit()
+        flash("Item removed from wishlist!", "success")
+    else:
+        flash("Item not found in wishlist.", "error")
+
+    return redirect(url_for('views.view_wishlist'))
+
+
+@bp.route('/add_to_cart/<int:product_id>', methods=['POST'])
 def add_to_cart(product_id):
-    # Ensure product_id is an integer
-    try:
-        product_id = int(product_id)
-    except ValueError:
-        return "Invalid product ID", 400
+    if not current_user.is_authenticated:
+        flash("Please log in to add items to the cart.", "warning")
+        return redirect(url_for('auth.login'))
 
-    # Initialize cart in session if not already present
-    if 'cart' not in session:
-        session['cart'] = {}
+    # Get the product details
+    product = Product.query.get(product_id)
+    if not product:
+        return "Product not found", 404
 
-    # Initialize cart to hold products as integers
-    cart = {int(k): v for k, v in session['cart'].items()}
+    # Check if the item already exists in the user's cart
+    cart_item = CartItem.query.filter_by(user_id=current_user.id, product_id=product_id).first()
 
-    # Get the product from the products list
-    product = next((p for p in PRODUCTS if p['id'] == product_id), None)
-
-    if product:
-        # If product is already in the cart, increment the quantity, but not exceeding stock
-        if product_id in cart:
-            if cart[product_id] < product['stock']:
-                cart[product_id] += 1  # Increment quantity by 1
-            else:
-                # If the cart quantity reaches stock, don't increase it further
-                cart[product_id] = product['stock']
+    if cart_item:
+        # If the product is already in the cart, update the quantity
+        if cart_item.quantity < product.stock_quantity:
+            cart_item.quantity += 1
         else:
-            # Add the product to the cart with a quantity of 1 if it's not already in the cart
-            cart[product_id] = 1
+            flash("Stock limit reached!", "warning")
+    else:
+        # Add new product to the cart
+        cart_item = CartItem(user_id=current_user.id, product_id=product_id, quantity=1)
+        db.session.add(cart_item)
 
-    # Save the updated cart back to the session
-    session['cart'] = cart
-
-    # Redirect to the product details page or referrer
+    db.session.commit()
+    flash("Product added to cart!", "success")
     return redirect(request.referrer)
 
 
-@bp.route("/cart")
+@bp.route('/cart')
 def cart():
-    cart = session.get("cart", {})
-    cart_items = []
-    total_price = 0  # Initialize total price
-    total_items = 0  # Initialize total items count
+    if not current_user.is_authenticated:
+        flash("Please log in to view your cart.", "warning")
+        return redirect(url_for('auth.login'))
 
-    # Loop through the cart to get each product and calculate totals
-    for product_id, quantity in cart.items():
-        product_id = int(product_id)
+    cart_items = CartItem.query.filter_by(user_id=current_user.id).all()
+    total_amount = sum(item.quantity * item.product.price for item in cart_items)
+    total_items = sum(item.quantity for item in cart_items)
 
-        product = next((p for p in PRODUCTS if p["id"] == product_id), None)
-        if product:
-            product_copy = product.copy()
-            product_copy["quantity"] = quantity
-            cart_items.append(product_copy)
-
-            # Calculate total price for this product
-            total_price += product["price"] * quantity
-            total_items += quantity  # Add quantity to total items
-
-    # Pass total price and total items to the template
-    return render_template("cart.html", cart_items=cart_items, total_price=total_price, total_items=total_items)
+    return render_template(
+        'cart.html',
+        cart_items=cart_items,
+        total_price=total_amount,
+        total_items=total_items
+    )
 
 @bp.route("/update_quantity/<int:product_id>", methods=["POST"])
 def update_quantity(product_id):
-    cart = session.get("cart", {})
+    if not current_user.is_authenticated:
+        return jsonify({'success': False, 'message': 'Please log in to update your cart.'}), 403
+
+    # Get the cart item for the user and product
+    cart_item = CartItem.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+    if not cart_item:
+        return jsonify({'success': False, 'message': 'Item not found in cart'}), 404
+
     try:
-        # Parse new quantity from request data
         new_quantity = int(request.json.get('quantity', 1))
     except (ValueError, TypeError):
         return jsonify({'success': False, 'message': 'Invalid quantity'}), 400
 
+    # Check if the new quantity exceeds stock
     product = next((p for p in PRODUCTS if p['id'] == product_id), None)
-
     if not product:
         return jsonify({'success': False, 'message': 'Product not found'}), 404
 
     if new_quantity > product['stock']:
-        new_quantity = product['stock']  # Cap quantity to available stock
+        return jsonify({'success': False, 'message': f'Stock limit reached. Maximum available: {product["stock"]}'}), 400
 
+    # Update or delete the cart item
     if new_quantity < 1:
-        cart.pop(str(product_id), None)  # Remove product if quantity is 0 or less
+        db.session.delete(cart_item)
     else:
-        cart[str(product_id)] = new_quantity
+        cart_item.quantity = new_quantity
 
-    session['cart'] = cart
+    db.session.commit()
 
-    # Calculate new total price and total items
-    total_price = sum(product["price"] * quantity for product_id, quantity in cart.items() if (product := next((p for p in PRODUCTS if p["id"] == int(product_id)), None)))
-    total_items = sum(cart.values())  # Total items is the sum of all quantities
+    # Calculate total price and total items
+    total_price = sum(item.quantity * next((p for p in PRODUCTS if p['id'] == item.product_id), {}).get('price', 0)
+                      for item in CartItem.query.filter_by(user_id=current_user.id).all())
+    total_items = sum(item.quantity for item in CartItem.query.filter_by(user_id=current_user.id).all())
 
-    return jsonify({'success': True, 'new_quantity': new_quantity, 'total_price': total_price, 'total_items': total_items})
+    return jsonify({'success': True, 'new_quantity': cart_item.quantity, 'total_price': total_price, 'total_items': total_items})
+
 
 @bp.route('/remove-from-cart/<int:product_id>', methods=['POST'])
 def remove_from_cart(product_id):
-    cart = session.get('cart', {})
-    if str(product_id) in cart:
-        del cart[str(product_id)]
-        session['cart'] = cart
+    if not current_user.is_authenticated:
+        flash("Please log in to modify your cart.", "warning")
+        return redirect(url_for('auth.login'))
+
+    cart_item = CartItem.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+    if cart_item:
+        db.session.delete(cart_item)
+        db.session.commit()
         flash("Item removed from cart!", "success")
     return redirect(url_for('views.cart'))
 
@@ -210,8 +268,8 @@ def search():
 
 @bp.route('/category/<category>')
 def category(category):
-    category = category.lower()
-    results = [p for p in PRODUCTS if p['category'].lower() == category]
+    PRODUCTS = Product.query.all()
+    results = [p for p in PRODUCTS if p.category.lower() == category.lower()]
     return render_template('category_results.html', category=category.capitalize(), results=results)
 
 @bp.route('/deliver')
@@ -371,3 +429,178 @@ def rate_product(order_id):
 @bp.route('/profile', methods=['GET', 'POST'])
 def profile():
     return render_template('profile.html')
+
+
+# Team 2 Merge
+
+@bp.route('/checkout', methods=['GET', 'POST'])
+@login_required
+def checkout():
+    cart_items_db = CartItem.query.filter_by(user_id=current_user.id).all()
+    if not cart_items_db:
+        flash('Your cart is empty!', 'danger')
+        return redirect(url_for('views.cart'))
+
+    # Fetch products and calculate costs from cart
+    cart_items = []
+    subtotal = 0
+    for cart_item in cart_items_db:
+        product = Product.query.get(cart_item.product_id)
+        if product:
+            cart_items.append({
+                'id': cart_item.product_id,
+                'name': product.name,
+                'price': product.price,
+                'quantity': cart_item.quantity
+            })
+            subtotal += product.price * cart_item.quantity
+
+    shipping = subtotal
+    tax = subtotal * 5/100  # 5% tax
+    total = subtotal + shipping + tax
+
+    # Pass data to the template
+    return render_template(
+        'checkout.html',
+        cart_items=cart_items,
+        subtotal=round(subtotal, 2),
+        shipping=round(shipping, 2),
+        tax=round(tax, 2),
+        total=round(total, 2)
+    )
+
+
+@bp.route('/place_order', methods=['POST'])
+@login_required
+def place_order():
+    user = current_user
+
+    # Fetch the product ID and quantity from the cart
+    cart_items_db = CartItem.query.filter_by(user_id=user.id).all()
+    if not cart_items_db:
+        flash('Your cart is empty!', 'danger')
+        return redirect(url_for('views.checkout'))
+
+    
+    # Create a new order
+    new_order = Order(customer_id=user.id, customer_name=user.firstname+" "+user.lastname, address_line_1=user.address_line_1, state=user.state, city=user.city, pincode=user.pincode, price=0, status="Pending", mail=user.email)
+    db.session.add(new_order)
+    db.session.commit()  # Commit order immediately to get order ID
+    db.session.refresh(new_order)  # Refresh to get the latest order ID
+
+    for cart_item in cart_items_db:
+        # Fetch the product from the dummy data using product_id from the cart
+        product = Product.query.get(cart_item.product_id)
+        if not product:
+            flash(f"Product with ID {cart_item.product_id} not found.", 'danger')
+            continue
+
+        # Calculate total cost for the product
+        total_cost = product.price * cart_item.quantity
+
+
+        new_order.price += total_cost
+
+        # Create an OrderItem entry for this order
+        order_item = OrderItem(OrderID=new_order.id, ProductID=cart_item.product_id, UserID=user.id, Quantity=cart_item.quantity, Price=total_cost)
+        
+        db.session.add(order_item)
+        db.session.commit()  # Commit order item immediately
+        db.session.refresh(order_item)  # Refresh order item
+
+        #decrease the stock levels of the products
+        
+        product.stock_quantity -= cart_item.quantity
+
+    # Clear the user's cart after order placement
+    CartItem.query.filter_by(user_id=user.id).delete()
+    db.session.commit()
+
+    flash('Order(s) placed successfully and your cart has been emptied!', 'success')
+
+    return redirect(url_for('views.my_orders'))
+
+
+@bp.route('/my_orders')
+@login_required
+def my_orders():
+    # Fetch all orders for the current user
+    orders = db.session.query(Order).filter(Order.customer_id == current_user.id).all()
+
+    # Create a structured data format for orders with their items
+    orders_with_items = []
+    for order in orders:
+        order_items = OrderItem.query.filter_by(OrderID=order.id).all()
+        items_data = [{'name': item.product.name, 'quantity': item.Quantity} for item in order_items]
+
+        orders_with_items.append({
+            'id': order.id,
+            'status': order.status,
+            'price': order.price,
+            'order_items': items_data
+        })
+
+    return render_template('my_orders.html', orders=orders_with_items)
+
+@bp.route('/cancel_order/<int:order_id>', methods=['POST'])
+@login_required
+def cancel_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    if order.customer_id != current_user.id:
+        flash('You can only cancel your own orders.', 'danger')
+        return redirect(url_for('views.my_orders'))
+
+    # Update the order status to 'Cancelled'
+    order.status = 'Cancelled'
+
+    #increace the stock levels of the products
+    order_items = OrderItem.query.filter_by(OrderID=order_id).all()
+    for order_item in order_items:
+        product = Product.query.get(order_item.ProductID)
+        product.stock_quantity += order_item.Quantity
+
+    db.session.commit()
+
+    flash('Order has been cancelled successfully.', 'success')
+    return redirect(url_for('views.my_orders'))
+
+
+@bp.route('/order/<int:order_id>')
+@login_required
+def view_order_items(order_id):
+    order = Order.query.filter_by(id=order_id, customer_id=current_user.id).first()
+    if not order:
+        flash("Order not found or unauthorized access.", "danger")
+        return redirect(url_for('views.my_orders'))
+    
+    order_items = OrderItem.query.filter_by(OrderID=order.id).all()
+    return render_template('view_order_items.html', order=order, order_items=order_items)
+
+@bp.route('/order/<int:order_id>/remove_item/<int:item_id>', methods=['POST'])
+@login_required
+def remove_order_item(order_id, item_id):
+    order = Order.query.filter_by(id=order_id, customer_id=current_user.id).first()
+    if not order:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for('views.view_order_items', order_id=order_id))
+    
+    order_item = OrderItem.query.filter_by(OrderItemID=item_id, OrderID=order.id).first()
+    if not order_item:
+        flash("Item not found.", "danger")
+        return redirect(url_for('views.view_order_items', order_id=order_id))
+    
+    # Increase stock quantity of the product
+    product = Product.query.get(order_item.ProductID)
+    if product:
+        product.stock_quantity += order_item.Quantity
+    
+    db.session.delete(order_item)
+    db.session.commit()
+
+    #deleting the order if no items left
+    if not OrderItem.query.filter_by(OrderID=order.id).all():
+        db.session.delete(order)
+        db.session.commit()
+        return redirect(url_for('views.my_orders'))
+    
+    return redirect(url_for('views.view_order', order_id=order_id))

@@ -34,6 +34,9 @@ class User(UserMixin,db.Model):
     def isDeliveryPerson(self):
         return self.role.lower() == 'delivery' and self.approved == True
 
+    #RelationShips 
+    cart_items = db.relationship('CartItem', back_populates='user')
+
 # Product Model (new)
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -50,6 +53,9 @@ class Product(db.Model):
     colour = db.Column(db.String(50), nullable=False)
     category = db.Column(db.String(100),nullable=False)
     rating = db.Column(db.String(100))
+
+    # Relationsships
+    cart_items = db.relationship('CartItem', back_populates='product')
 
 
     def __init__(self, name, price, stock_quantity, brand, size, target_user, type, image, description, details, colour, category, rating):
@@ -170,3 +176,23 @@ class ProductAddLogs(db.Model):
         self.quantity = quantity
         self.cost = cost
         self.date_added = date_added if date_added else datetime.now(timezone.utc)
+
+
+
+class Wishlist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)  # Foreign key to User table
+    product_id = db.Column(db.Integer, nullable=False)  # Foreign key to Product table
+
+    def __repr__(self):
+        return f'<Wishlist user_id={self.user_id}, product_id={self.product_id}>'
+    
+
+class CartItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    quantity = db.Column(db.Integer, default=1)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+
+    user = db.relationship('User', back_populates='cart_items')
+    product = db.relationship('Product', back_populates='cart_items')
