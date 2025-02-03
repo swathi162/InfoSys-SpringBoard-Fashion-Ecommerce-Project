@@ -85,6 +85,7 @@ class Order(db.Model):
 
     # Foreign Keys
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    delivery_person_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, default = None)
 
     # Order Details
     price = db.Column(db.Float, nullable=False)
@@ -101,7 +102,8 @@ class Order(db.Model):
     mail = db.Column(db.String(50), nullable=False)
 
     # Establishing the relationship
-    user = db.relationship('User', backref=db.backref('orders', lazy=True))
+    user = db.relationship('User', foreign_keys=[customer_id],backref=db.backref('orders', lazy=True))
+    delivery_person = db.relationship('User', foreign_keys=[delivery_person_id], backref = 'deliveries')
 
     def __init__(
         self,

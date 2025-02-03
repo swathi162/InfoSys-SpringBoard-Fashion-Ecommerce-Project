@@ -18,6 +18,8 @@ OrderItem = OrderItems
 @bp.route('/home')
 @login_required
 def home():
+    if current_user.isDeliveryPerson():
+        return redirect(url_for('views.dashboard'))
     global PRODUCTS
     PRODUCTS = Product.query.all()
     return render_template('home.html', products=PRODUCTS)
@@ -173,6 +175,7 @@ def cart():
     )
 
 @bp.route("/update_quantity/<int:product_id>", methods=["POST"])
+@login_required
 def update_quantity(product_id):
     if not current_user.is_authenticated:
         return jsonify({'success': False, 'message': 'Please log in to update your cart.'}), 403
@@ -212,6 +215,7 @@ def update_quantity(product_id):
 
 
 @bp.route('/remove-from-cart/<int:product_id>', methods=['POST'])
+@login_required
 def remove_from_cart(product_id):
     if not current_user.is_authenticated:
         flash("Please log in to modify your cart.", "warning")
@@ -273,121 +277,69 @@ def category(category):
     return render_template('category_results.html', category=category.capitalize(), results=results)
 
 @bp.route('/deliver')
+@login_required
 @is_delivery_person
 def deliver():
     return Response("Delivered", status=200)
 
-
-
-#<a href="{{ url_for('views.view_product', id=product.id) }}" class="btn btn-info btn-sm">View</a>
-
-
-
-
 @bp.route('/partner_dash')
-# @is_delivery_person
+@login_required
+@is_delivery_person
 def dashboard():
-    # Fetch user info (hardcoded for now, you can change this later)
-    user = {'name': current_user.firstname, 'pincode':current_user.pincode}
+     # Use current_user which represents the logged-in delivery person
+    delivery_person = current_user
+    pincode = delivery_person.pincode  # Get pincode from current_user
 
-    # Fetch stats from the database
-    stats = Stats.query.first()  # Assuming there's only one stats row for simplicity
-    if not stats:
-        stats = Stats(total_orders=0, delivered=0, in_transit=0, failed=0)
-        db.session.add(stats)
-        db.session.commit()
+    # Fetch new orders that haven't been assigned (deliver_person is None) and match the pincode
+    new_orders = Order.query.filter(Order.delivery_person_id.is_(None), Order.pincode == pincode).all()
 
-    # Fetch orders from the database
-    orders = Order.query.filter_by(pincode=user['pincode']).all()
+    # Fetch orders assigned to this delivery person, excluding delivered orders
+    assigned_orders = Order.query.filter(Order.delivery_person_id == current_user.id, Order.status != 'Delivered').all()
 
-    # Only allow orders in the user's state (California in this case) to be viewed or delivered
-    return render_template('delivery_person_dashboard.html', user=user, stats=stats, orders=orders)
+    # Fetch delivered orders (status 'Delivered Successfully') for this delivery person
+    delivered_orders = Order.query.filter(Order.delivery_person_id == current_user.id, Order.status == 'Delivered').all()
+
+    return render_template('partner_home.html',
+                           new_orders=new_orders,
+                           assigned_orders=assigned_orders,
+                           delivered_orders=delivered_orders)
 
 
 @bp.route('/update_status/<int:order_id>', methods=['POST'])
+@is_delivery_person
 def update_status(order_id):
-    new_status = request.form['status']  # Get the selected status from the form
-    order = Order.query.get(order_id)  # Fetch the order by ID from the database
+    order = Order.query.get(order_id)
 
     if order:
-        # Update the order's status
+        new_status = request.form['status']
         order.status = new_status
 
-        # If the status is "Delivered Successfully", send a thank-you email
-        if new_status == 'Delivered Successfully':
-            rating_url = url_for('views.rate_product', order_id=order.id, _external=True)
-            print(rating_url)
-            send_thankyou_email(order.user.email, order.user.first_name, rating_url=None)
+        # If the order was not assigned (deliver_person is None), assign it to the current delivery person
+        if order.delivery_person_id is None:
+            order.delivery_person_id = current_user.id
 
+        # Handle the case when the order is successfully delivered
+        if order.status == 'Delivered':
+            send_thankyou_email(current_user.email, current_user.firstname+" "+current_user.lastname, url_for('views.rate_product', order_id = order_id))  # Send a thank you email
+            # Move the order to the delivered orders section
+            # Optionally, remove it from the assigned orders (this is handled by the dashboard query)
+
+        # If the order has failed, unassign the delivery person
+        if order.status == 'Failed':
+            order.delivery_person_id = None
+
+        # Commit the changes to the database
         db.session.commit()
 
-        # Update stats (optional, but if required to refresh stats)
-        update_stats()
 
-    return redirect(url_for('views.dashboard'))  # Redirect back to the dashboard or the orders list
+    return redirect(url_for('views.dashboard'))  # Redirect back to the dashboard
 
 
-def update_stats():
-    # Recalculate stats for the dashboard or stats view
-    stats = Stats.query.first()
-    stats.total_orders = Order.query.count()
-    stats.delivered = Order.query.filter_by(status='Delivered Successfully').count()
-    stats.in_transit = Order.query.filter_by(status='In Transit').count()
-    stats.failed = Order.query.filter_by(status='Failed').count()
-    db.session.commit()
-
-
-# @bp.route('/update_status/<int:order_id>', methods=['POST'])
-# def update_status(order_id):
-#     new_status = request.form['status']
-#     order = Order.query.get(order_id)
-
-#     if order:
-#         # Update the order status
-#         order.status = new_status
-#         db.session.commit()
-
-#         # If status is "Delivered Successfully", send an email to the user
-#         if new_status == "Delivered Successfully":
-#             send_rating_email(order)
-
-#         # Update stats if needed
-#         update_stats()
-
-#     return redirect(url_for('views.dashboard'))
-# #
-# #
-# def send_rating_email(order):
-#     user_email = order.user.email  # Get the user's email (assuming the order has a user reference)
-#     product = order.product  # Get the product related to the order
-
-#     # Create the message
-#     subject = "Your Order has been Delivered! Please Rate Your Product"
-#     body = f"""
-#     Hi {order.user.first_name},
-
-#     We hope you're enjoying your new product: {product.name}.
-
-#     Could you please rate the product from 1 to 5 (1 being the worst, 5 being the best)?
-#     Your feedback helps us improve our products and services!
-
-#     Click the link below to rate the product:
-#     {url_for('views.submit_rating', order_id=order.id, _external=True)}
-
-#     Thank you for your support!
-#     """
-
-#     # Send the email
-#     msg = Message(subject, recipients=[user_email], body=body)
-#     mail.send(msg)
-
-
-####################################mail###################
 
 
 
 @bp.route('/rate_product/<int:order_id>', methods=['GET', 'POST'])
-
+@login_required
 def rate_product(order_id):
     # Fetch the order using the order_id
     order = Order.query.get_or_404(order_id)
@@ -427,6 +379,7 @@ def rate_product(order_id):
     return render_template('rate_product.html', product=product,order=order)
 
 @bp.route('/profile', methods=['GET', 'POST'])
+@login_required
 def profile():
     return render_template('profile.html')
 

@@ -21,9 +21,11 @@
                             <p class="card-text"><strong>Quantity:</strong> {{ item.Quantity }}</p>
                             <p class="card-text"><strong>Price:</strong> ₹{{ item.product.price }}</p>
                         </div>
+                        {% if order.status != "Delivered" and order.status != "Cancelled" %}
                         <form action="{{ url_for('views.remove_order_item', order_id=order.id, item_id=item.OrderItemID) }}" method="POST">
                             <button type="submit" class="btn btn-danger btn-sm">Remove</button>
                         </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -32,11 +34,14 @@
     {% else %}
         <p class="text-center text-muted">No items in this order.</p>
     {% endif %}
-    <div class="d-flex flex-row justify-content-between">
+    <div class="d-flex flex-row justify-content-between mb-3">
         <a href="{{ url_for('views.my_orders') }}" class="btn btn-success">Back to Orders</a>
+
+        {% if order.status != "Delivered" and order.status != "Cancelled" %}
         <form action="{{ url_for('views.cancel_order', order_id=order.id) }}" method="POST">
             <button type="submit" class="btn btn-danger">Cancel Order</button>
         </form>
+        {% endif %}
         
     </div>
 </div>
