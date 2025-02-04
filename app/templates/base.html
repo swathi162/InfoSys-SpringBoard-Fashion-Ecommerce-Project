@@ -50,18 +50,7 @@
                         </ul>
                     </div>
                 </div>
-                <!-- <div class="notifications-dropdown">
-                    <button class="icon-bell-button" onclick="toggleNotificationsDropdown(event)">
-                        <i class="bi bi-bell"></i>
-                    </button>
-                    <div class="notifications-menu">
-                        <ul>
-                            <li><button>Notification 1</button></li>
-                            <li><button>Notification 2</button></li>
-                            <li><button>Notification 3</button></li>
-                        </ul>
-                    </div>
-                </div> -->
+               
                 <div class="profile-dropdown">
                     <button class="profile-name-button btn" onclick="toggleProfileDropdown(event)"> <span id="greeting"></span>,&nbsp;{{ current_user.firstname }}!
                         <i class="bi bi-caret-down-fill"></i>
@@ -70,11 +59,8 @@
                         <ul>
                             <li><a href="{{ url_for('views.cart') }}"><button id="cart-button"><i class="bi bi-cart3"></i> My Cart <span id="cart-count"></span></button></a></li>
                             <li><a href="{{ url_for('views.view_wishlist') }}"><button><i class="bi bi-bag-heart"></i> My Wishlist</button></a></li>
-                            <li><button><i class="bi bi-house-door"></i> My Address</button></li>
                             <li><a href="{{ url_for('views.my_orders') }}"><button><i class="bi bi-box-seam"></i> My Orders</button></a></li>
                             <li><a href="{{ url_for('views.profile')  }} "> <button><i class="bi bi-gear"></i> Settings</button></a></li>
-                            <li><a href="/admin"> <button><i class="bi bi-gear"></i> Admin</button></a></li>
-
                             <li><a href="{{ url_for('auth.logout') }}"><button><i class="bi bi-box-arrow-left"></i> Logout </button></a></li>
                         </ul>
                     </div>
