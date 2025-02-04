@@ -30,11 +30,15 @@ def home():
 
 
 @bp.route('/product/<int:product_id>')
+@login_required
 def product_details(product_id):
     product = Product.query.get(product_id)
+    PRODUCTS = Product.query.all()
     if product is None:
         return "Product not found", 404
-    return render_template('product.html', product=product)
+    similar_products = [_ for _ in PRODUCTS if ((_.category == product.category or _.type == product.type or _.target_user == product.target_user) and _.id != product.id) ]
+    
+    return render_template('product.html', product=product, similar_products=similar_products)
 
 
 @bp.route('/update', methods=['GET', 'POST'])
@@ -233,11 +237,13 @@ def remove_from_cart(product_id):
     return redirect(url_for('views.cart'))
 
 
-
 @bp.route('/search')
+@login_required
 def search():
     query = request.args.get('query', '').lower()  # Get the search query from the URL parameters
     query_words = query.split()  # Split the query into individual words
+
+    PRODUCTS = Product.query.all()
     
     if query:
         results = []
@@ -246,15 +252,7 @@ def search():
         for p in PRODUCTS:
             try:
                 # Combine product attributes into one string for easier matching
-                product_str = (
-                    str(p.get('name', '')).lower() + ' ' + 
-                    str(p.get('description', '')).lower() + ' ' + 
-                    str(p.get('brand', '')).lower() + ' ' + 
-                    str(p.get('colour', '')).lower() + ' ' + 
-                    str(p.get('category', '')).lower() + ' ' + 
-                    str(p.get('target_user', '')).lower() + ' ' + 
-                    str(p.get('type', '')).lower()
-                )
+                product_str = str(p.name).lower() + ' ' + str(p.description).lower() + ' ' + str(p.brand).lower() + ' ' + str(p.colour).lower() + ' ' + str(p.category).lower() + ' ' + str(p.target_user).lower() + ' ' + str(p.type).lower()
                 
                 # Check for exact matches for each word in the query
                 individual_match = all(word in product_str.split() for word in query_words)
@@ -270,7 +268,6 @@ def search():
                 
     else:
         results = []  # No results if query is empty
-    
     return render_template('search_results.html', query=query, results=results)
 
 
@@ -433,6 +430,14 @@ def checkout():
 def place_order():
     user = current_user
 
+    address_line_1 = request.form.get('address_line_1')
+    state = request.form.get('state')
+    city = request.form.get('city')
+    pincode = request.form.get('pincode')
+    firstname = request.form.get('firstname')
+    lastname = request.form.get('lastname')
+    email = request.form.get('email')
+
     # Fetch the product ID and quantity from the cart
     cart_items_db = CartItem.query.filter_by(user_id=user.id).all()
     if not cart_items_db:
@@ -441,7 +446,7 @@ def place_order():
 
     
     # Create a new order
-    new_order = Order(customer_id=user.id, customer_name=user.firstname+" "+user.lastname, address_line_1=user.address_line_1, state=user.state, city=user.city, pincode=user.pincode, price=0, status="Pending", mail=user.email)
+    new_order = Order(customer_id=user.id, customer_name=firstname+" "+lastname, address_line_1=address_line_1, state=state, city=city, pincode=pincode, price=0, status="Pending", mail=email)
     db.session.add(new_order)
     db.session.commit()  # Commit order immediately to get order ID
     db.session.refresh(new_order)  # Refresh to get the latest order ID
@@ -476,7 +481,7 @@ def place_order():
 
     flash('Order(s) placed successfully and your cart has been emptied!', 'success')
 
-    return redirect(url_for('views.my_orders'))
+    return jsonify({"success": True})
 
 
 @bp.route('/my_orders')

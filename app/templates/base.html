@@ -20,7 +20,7 @@
                 <div class="container-fluid">
                     <a class="navbar-brand" href="{{ url_for('views.home') }}">
                         <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" width="50" height="50" class="d-inline-block align-center">
-                        StyleVerse
+                        𝒮𝓉𝓎𝓁𝑒 𝓋𝑒𝓇𝓈𝑒
                     </a>
                 </div>
             </div>
@@ -50,7 +50,7 @@
                         </ul>
                     </div>
                 </div>
-                <div class="notifications-dropdown">
+                <!-- <div class="notifications-dropdown">
                     <button class="icon-bell-button" onclick="toggleNotificationsDropdown(event)">
                         <i class="bi bi-bell"></i>
                     </button>
@@ -61,10 +61,10 @@
                             <li><button>Notification 3</button></li>
                         </ul>
                     </div>
-                </div>
+                </div> -->
                 <div class="profile-dropdown">
-                    <button class="profile-photo-button" onclick="toggleProfileDropdown(event)">
-                        <img src="{{ url_for('static', filename='img/DSC_0001.JPG') }}" alt="Profile" class="profile-photo">
+                    <button class="profile-name-button btn" onclick="toggleProfileDropdown(event)"> <span id="greeting"></span>,&nbsp;{{ current_user.firstname }}!
+                        <i class="bi bi-caret-down-fill"></i>
                     </button>
                     <div class="dropdown">
                         <ul>
@@ -89,6 +89,15 @@
             <p>&copy; 2024 StyleVerse. All Rights Reserved.</p>
         </footer>
     </div>
+    <script>
+        function getGreeting() {
+            const hour = new Date().getHours();
+            if (hour < 12) return "Good morning";
+            if (hour < 18) return "Good afternoon";
+            return "Good evening";
+        }
+        document.getElementById("greeting").innerText = getGreeting();
+    </script>
     <script>
         {% block scripts %}{% endblock %}
     </script>

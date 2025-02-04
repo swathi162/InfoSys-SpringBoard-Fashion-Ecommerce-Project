@@ -69,8 +69,8 @@ class Visualize:
     @staticmethod
     def generate_inventory_stocks_graph(products: list, stocks: list, xlabel = "Category", ylabel = "Stock") -> BytesIO:
         n =  len(products)
-        plt.figure(figsize=(10, 5+(n//10)))
-        plt.barh(products, stocks, color="#11FF33")
+        plt.figure(figsize=(max(10, min(15, 8 + 0.2 * n)), max(5, min(12, 4 + 0.3 * n))))
+        plt.bar(products, stocks, color="#11FF33")
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.title('Inventory Stock Levels')
@@ -89,7 +89,7 @@ class Visualize:
             expenses = expenses[:n]
 
         profits = [revenue[i]-expenses[i] for i in range(n)]
-        
+
         plt.figure(figsize=(10, 5))
         plt.plot(dates, expenses, label="Expenses", color="grey")
         plt.plot(dates, revenue, label="Revenue", color="green")
