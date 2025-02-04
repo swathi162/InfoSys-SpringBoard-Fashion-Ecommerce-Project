@@ -149,7 +149,7 @@ def create_app(config_class="Config"):
 
         # Generate orders for each day in the past 3 months
         while start_date <= current_date:
-            orders_per_day = random.randint(30, 45)
+            orders_per_day = random.randint(10, 25)
             for _ in range(orders_per_day):
                 # Select a random user and product
                 user = random.choice(users)
@@ -158,8 +158,15 @@ def create_app(config_class="Config"):
                 order_items = []
                 number_of_items = 0
                 total_price_of_order = 0
+
+                tryes = 0
                 #one to 4 items per order
-                while number_of_items < random.randint(1,4):
+                while number_of_items < random.randint(1,3):
+                    tryes += 1
+                    if tryes >= 30:
+                        print("tries more than 30")
+                        break
+
                     product_choice = random.choice(products)
                     if product_choice.stock_quantity <= 0:
                         continue
