@@ -257,7 +257,7 @@ def create_app(config_class="Config"):
                 log = ProductAddLogs(
                     product_id=product.id,
                     quantity=quantity,
-                    cost=cost,
+                    cost=cost*quantity,
                     date_added=random.choice([start_date + timedelta(days=i) for i in range(90)])  # Random date within the last 90 days
                 )
 

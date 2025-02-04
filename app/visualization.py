@@ -89,17 +89,17 @@ class Visualize:
             expenses = expenses[:n]
 
         profits = [revenue[i]-expenses[i] for i in range(n)]
-        print(len(expenses), len(revenue), len(profits))
+        
         plt.figure(figsize=(10, 5))
         plt.plot(dates, expenses, label="Expenses", color="grey")
         plt.plot(dates, revenue, label="Revenue", color="green")
         plt.plot(dates, profits, label="Profits", color="pink")
-        plt.xlabel('Date')
+        plt.xlabel('Dates')
         plt.gcf().autofmt_xdate()
         plt.ylabel('Amount')
         plt.title('Financial Performance')
         plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
-        plt.xticks(dates[::10], rotation=45)
+        plt.xticks(dates[::max(1, len(dates) // 10)], rotation=45)
         
         plt.tight_layout()
 
