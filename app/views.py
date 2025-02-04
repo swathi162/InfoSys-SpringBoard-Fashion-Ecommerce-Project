@@ -292,7 +292,7 @@ def dashboard():
     pincode = delivery_person.pincode  # Get pincode from current_user
 
     # Fetch new orders that haven't been assigned (deliver_person is None) and match the pincode
-    new_orders = Order.query.filter(Order.delivery_person_id.is_(None), Order.pincode == pincode).all()
+    new_orders = Order.query.filter(Order.delivery_person_id.is_(None), Order.pincode == pincode, Order.status == "Pending").all()
 
     # Fetch orders assigned to this delivery person, 
     assigned_orders = Order.query.filter(Order.delivery_person_id == current_user.id, Order.status == 'Pending').all()
@@ -566,4 +566,4 @@ def remove_order_item(order_id, item_id):
         db.session.commit()
         return redirect(url_for('views.my_orders'))
     
-    return redirect(url_for('views.view_order', order_id=order_id))
+    return redirect(url_for('views.view_order_items', order_id=order_id))
