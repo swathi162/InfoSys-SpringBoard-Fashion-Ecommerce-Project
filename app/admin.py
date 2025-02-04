@@ -164,7 +164,7 @@ def update_product(id):
             db.session.commit()
 
             flash("Product updated successfully!", "success")
-            return redirect(url_for('views.product_list'))  # Redirect to the product list page
+            return redirect(url_for('admin.product_list'))  # Redirect to the product list page
 
         except Exception as e:
             db.session.rollback()
